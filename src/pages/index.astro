@@ -1,0 +1,699 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { buildLinkGraph, formatDate, getSortedPosts } from '../utils/posts';
+import { toPostHref } from '../utils/wikilinks.mjs';
+
+const posts = await getSortedPosts();
+const { outgoing, incoming } = buildLinkGraph(posts);
+
+/* ---------------- Grafo de conocimiento (posiciones calculadas en build) ---------------- */
+const VIEW_W = 800;
+const VIEW_H = 460;
+const center = { x: VIEW_W / 2, y: VIEW_H / 2 };
+const radius = posts.length > 1 ? 160 : 0;
+
+const nodes = posts.map((post, i) => {
+  const angle = -Math.PI / 2 + (i / Math.max(posts.length, 1)) * Math.PI * 2;
+  const degree = (outgoing.get(post.id)?.length ?? 0) + (incoming.get(post.id)?.length ?? 0);
+  return {
+    id: post.id,
+    title: post.data.title,
+    x: Math.round(center.x + Math.cos(angle) * radius * 1.45),
+    y: Math.round(center.y + Math.sin(angle) * radius),
+    r: 9 + Math.min(degree, 8) * 2,
+  };
+});
+
+const nodeById = new Map(nodes.map((n) => [n.id, n]));
+const edgeKeys = new Set<string>();
+const edges: { source: string; target: string }[] = [];
+for (const [source, targets] of outgoing) {
+  for (const target of targets) {
+    const key = [source, target].sort().join('::');
+    if (!edgeKeys.has(key)) {
+      edgeKeys.add(key);
+      edges.push({ source, target });
+    }
+  }
+}
+
+const headline = ['Ideas', 'que', 'confluyen.'];
+const [featured, ...rest] = posts;
+---
+
+<BaseLayout title="Confluencia">
+  <main>
+    <!-- ---------------- Portada ---------------- -->
+    <section class="intro container">
+      <p class="eyebrow" data-reveal data-intro-fade>Un blog como red de conocimiento</p>
+      <h1 class="intro__title">
+        {
+          headline.map((word) => (
+            <span class="intro__word">
+              {[...word].map((char) => (
+                <span class="intro__char" data-intro-char data-reveal>
+                  {char}
+                </span>
+              ))}
+            </span>
+          ))
+        }
+      </h1>
+      <p class="intro__lede" data-reveal data-intro-fade>
+        Cada artículo es un nodo. Cada <code>[[enlace]]</code> es un hilo. Explora cómo las notas se conectan entre sí
+        y deja que una idea te lleve a la siguiente.
+      </p>
+      <div class="intro__stats" data-reveal data-intro-fade>
+        <span><strong>{posts.length}</strong> artículos</span>
+        <span><strong>{edges.length}</strong> conexiones</span>
+      </div>
+    </section>
+
+    <!-- ---------------- Artículos ---------------- -->
+    <section id="articulos" class="posts container" aria-labelledby="articulos-title">
+      <header class="section-head">
+        <h2 id="articulos-title" class="eyebrow">Artículos recientes</h2>
+      </header>
+
+      {
+        posts.length === 0 ? (
+          <p class="empty">
+            Todavía no hay artículos. Añade archivos <code>.md</code> en <code>src/content/blog</code>.
+          </p>
+        ) : (
+          <div class="grid">
+            {[featured, ...rest].map((post, i) => {
+              const links = (outgoing.get(post.id)?.length ?? 0) + (incoming.get(post.id)?.length ?? 0);
+              return (
+                <a
+                  href={toPostHref(post.id)}
+                  class:list={['card', { 'card--featured': i === 0 }]}
+                  data-card
+                  data-reveal
+                >
+                  <div class="card__media">
+                    {post.data.cover_image ? (
+                      <img
+                        src={post.data.cover_image}
+                        alt=""
+                        loading={i === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
+                      />
+                    ) : (
+                      <div class="card__fallback" />
+                    )}
+                  </div>
+                  <div class="card__body">
+                    <div class="card__meta">
+                      <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+                      <span class="card__links" title="Conexiones">
+                        ◆ {links}
+                      </span>
+                    </div>
+                    <h3 class="card__title">{post.data.title}</h3>
+                    {post.data.description && <p class="card__desc">{post.data.description}</p>}
+                    <span class="card__cta">
+                      Leer artículo <span aria-hidden="true">→</span>
+                    </span>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        )
+      }
+    </section>
+
+    <!-- ---------------- Red de conocimiento ---------------- -->
+    {
+      nodes.length > 0 && (
+        <section id="red" class="network container" aria-labelledby="red-title">
+          <header class="section-head">
+            <h2 id="red-title" class="eyebrow">La red</h2>
+            <p class="network__hint">Pasa el cursor sobre un nodo para ver sus conexiones. Haz clic para abrirlo.</p>
+          </header>
+          <div class="network__frame" data-reveal data-network>
+            <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="img" aria-label="Grafo de conexiones entre artículos">
+              <defs>
+                <linearGradient id="edge-g" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#2755ED" />
+                  <stop offset="1" stop-color="#1B399E" />
+                </linearGradient>
+                <radialGradient id="node-g">
+                  <stop offset="0" stop-color="#2755ED" />
+                  <stop offset="1" stop-color="#1B399E" />
+                </radialGradient>
+              </defs>
+              <g>
+                {edges.map((e) => {
+                  const a = nodeById.get(e.source)!;
+                  const b = nodeById.get(e.target)!;
+                  return (
+                    <line
+                      class="graph-edge"
+                      x1={a.x}
+                      y1={a.y}
+                      x2={b.x}
+                      y2={b.y}
+                      pathLength="1"
+                      data-edge
+                      data-source={e.source}
+                      data-target={e.target}
+                    />
+                  );
+                })}
+              </g>
+              <g>
+                {nodes.map((n) => (
+                  <a href={toPostHref(n.id)} class="graph-node" data-node={n.id}>
+                    <circle class="graph-node__halo" cx={n.x} cy={n.y} r={n.r} data-halo />
+                    <circle class="graph-node__dot" cx={n.x} cy={n.y} r={n.r} data-dot />
+                    <text x={n.x} y={n.y + n.r + 26} text-anchor="middle">
+                      {n.title}
+                    </text>
+                  </a>
+                ))}
+              </g>
+            </svg>
+          </div>
+        </section>
+      )
+    }
+  </main>
+</BaseLayout>
+
+<script>
+  import { animate, stagger, utils } from 'animejs';
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const chars = document.querySelectorAll<HTMLElement>('[data-intro-char]');
+  const fades = document.querySelectorAll<HTMLElement>('[data-intro-fade]');
+  const cards = document.querySelectorAll<HTMLElement>('[data-card]');
+  const network = document.querySelector<HTMLElement>('[data-network]');
+  const edges = document.querySelectorAll<SVGLineElement>('[data-edge]');
+  const dots = document.querySelectorAll<SVGCircleElement>('[data-dot]');
+  const halos = document.querySelectorAll<SVGCircleElement>('[data-halo]');
+  const graphNodes = document.querySelectorAll<SVGAElement>('[data-node]');
+
+  /* ---------- Spotlight que sigue al cursor en las tarjetas ---------- */
+  cards.forEach((card) => {
+    card.addEventListener('pointermove', (event) => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${event.clientX - rect.left}px`);
+      card.style.setProperty('--my', `${event.clientY - rect.top}px`);
+    });
+  });
+
+  /* ---------- Resaltado de conexiones al pasar sobre un nodo ---------- */
+  graphNodes.forEach((node) => {
+    const id = node.dataset.node;
+    node.addEventListener('pointerenter', () => {
+      network?.classList.add('is-focused');
+      node.classList.add('is-active');
+      edges.forEach((edge) => {
+        if (edge.dataset.source === id || edge.dataset.target === id) edge.classList.add('is-active');
+      });
+    });
+    node.addEventListener('pointerleave', () => {
+      network?.classList.remove('is-focused');
+      node.classList.remove('is-active');
+      edges.forEach((edge) => edge.classList.remove('is-active'));
+    });
+  });
+
+  if (reduceMotion) {
+    utils.set([...chars, ...fades, ...cards, network].filter(Boolean) as HTMLElement[], { opacity: 1 });
+    utils.set(edges, { strokeDashoffset: 0 });
+  } else {
+    /* ---------- Titular: letras que emergen de abajo hacia arriba ---------- */
+    animate(chars, {
+      opacity: [0, 1],
+      translateY: ['0.6em', '0em'],
+      rotate: [8, 0],
+      duration: 1300,
+      delay: stagger(35, { start: 150 }),
+      ease: 'outExpo',
+    });
+
+    animate(fades, {
+      opacity: [0, 1],
+      translateY: [20, 0],
+      duration: 1000,
+      delay: stagger(120, { start: 700 }),
+      ease: 'outQuart',
+    });
+
+    /* ---------- Orbes de fondo flotando en bucle ---------- */
+    animate('[data-orb]', {
+      translateX: () => utils.random(-120, 120),
+      translateY: () => utils.random(-80, 80),
+      scale: () => utils.random(0.85, 1.25, 2),
+      duration: () => utils.random(7000, 11000),
+      delay: stagger(600),
+      ease: 'inOutSine',
+      loop: true,
+      alternate: true,
+    });
+
+    /* ---------- Tarjetas y grafo al entrar en pantalla ---------- */
+    let graphPlayed = false;
+    const playGraph = () => {
+      if (graphPlayed) return;
+      graphPlayed = true;
+      animate(network!, { opacity: [0, 1], duration: 600, ease: 'outQuad' });
+      animate(dots, {
+        scale: [0, 1],
+        duration: 1200,
+        delay: stagger(140, { start: 150 }),
+        ease: 'outElastic(1, .55)',
+      });
+      animate(edges, {
+        strokeDashoffset: [1, 0],
+        duration: 1400,
+        delay: stagger(160, { start: 500 }),
+        ease: 'inOutQuart',
+      });
+      animate(halos, {
+        scale: [1, 2.4],
+        opacity: [0.55, 0],
+        duration: 2400,
+        delay: stagger(450, { start: 1200 }),
+        loop: true,
+        ease: 'outQuad',
+      });
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleCards = entries
+          .filter((e) => e.isIntersecting && (e.target as HTMLElement).dataset.card !== undefined)
+          .map((e) => e.target as HTMLElement);
+
+        if (visibleCards.length) {
+          animate(visibleCards, {
+            opacity: [0, 1],
+            translateY: [60, 0],
+            scale: [0.96, 1],
+            duration: 1100,
+            delay: stagger(110),
+            ease: 'outExpo',
+          });
+        }
+
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          if (e.target === network) playGraph();
+          observer.unobserve(e.target);
+        });
+      },
+      { rootMargin: '0px 0px -8% 0px' },
+    );
+
+    cards.forEach((card) => observer.observe(card));
+    if (network) observer.observe(network);
+  }
+</script>
+
+<style>
+  /* ---------------- Fondo aurora ---------------- */
+  .aurora {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 900px;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .aurora__orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.45;
+  }
+
+  .aurora__orb--a {
+    top: -120px;
+    left: -80px;
+    width: 520px;
+    height: 520px;
+    background: #2755ED;
+    opacity: 0.12;
+  }
+
+  .aurora__orb--b {
+    top: 40px;
+    right: -120px;
+    width: 600px;
+    height: 600px;
+    background: #1B399E;
+    opacity: 0.18;
+  }
+
+  .aurora__orb--c {
+    top: 360px;
+    left: 35%;
+    width: 420px;
+    height: 420px;
+    background: #2755ED;
+    opacity: 0.08;
+  }
+
+  /* ---------------- Portada ---------------- */
+  .intro {
+    padding-block: clamp(5rem, 14vh, 9rem) clamp(3rem, 8vh, 5rem);
+  }
+
+  .intro__title {
+    margin: 1.5rem 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(3.4rem, 11vw, 9.5rem);
+    font-weight: 500;
+    font-style: normal;
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    font-variation-settings: 'opsz' 144;
+    color: var(--text);
+  }
+
+  .intro__word {
+    display: inline-block;
+    margin-right: 0.22em;
+    white-space: nowrap;
+    font-style: normal;
+  }
+
+  .intro__char {
+    display: inline-block;
+    will-change: transform, opacity;
+    transform-origin: 0 100%;
+    font-style: normal;
+  }
+
+  .intro__lede {
+    max-width: 56ch;
+    margin: 2rem 0 0;
+    font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+    color: var(--text-muted);
+  }
+
+  .intro__lede code,
+  .empty code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--brand-primary);
+  }
+
+  .intro__stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2.5rem;
+    font-size: 0.9rem;
+    color: var(--text-faint);
+  }
+
+  .intro__stats strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  /* ---------------- Secciones ---------------- */
+  .section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .section-head h2 {
+    margin: 0;
+  }
+
+  .empty {
+    color: var(--text-muted);
+  }
+
+  /* ---------------- Tarjetas ---------------- */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+    gap: 1.5rem;
+  }
+
+  .card {
+    --mx: 50%;
+    --my: 0%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius);
+    overflow: hidden;
+    text-decoration: none;
+    background: rgba(8, 12, 24, 0.78);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    transition:
+      transform 0.4s var(--ease-out),
+      border-color 0.3s ease,
+      box-shadow 0.4s var(--ease-out);
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: radial-gradient(380px circle at var(--mx) var(--my), rgba(39, 85, 237, 0.16), transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: var(--border-strong);
+    box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.9);
+  }
+
+  .card:hover::after {
+    opacity: 1;
+  }
+
+  .card__media {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--ink-850);
+  }
+
+  .card__media img,
+  .card__fallback {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.2s var(--ease-out);
+  }
+
+  .card__fallback {
+    background:
+      radial-gradient(circle at 30% 30%, rgba(39, 85, 237, 0.35), transparent 60%),
+      radial-gradient(circle at 70% 70%, rgba(27, 57, 158, 0.3), transparent 60%),
+      #050811;
+  }
+
+  .card:hover .card__media img {
+    transform: scale(1.05);
+  }
+
+  .card__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 1.5rem 1.6rem 1.75rem;
+  }
+
+  .card__meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-faint);
+  }
+
+  .card__links {
+    color: var(--brand-primary);
+    font-weight: 500;
+  }
+
+  .card__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.65rem;
+    font-weight: 500;
+    font-style: normal;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .card__desc {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
+  .card__cta {
+    display: inline-flex;
+    gap: 0.4rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--brand-primary);
+  }
+
+  .card__cta span {
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  .card:hover .card__cta span {
+    transform: translateX(6px);
+  }
+
+  @media (min-width: 900px) {
+    .card--featured {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      min-height: 440px;
+    }
+
+    .card--featured .card__media {
+      flex: 1.4;
+      aspect-ratio: auto;
+    }
+
+    .card--featured .card__body {
+      flex: 1;
+      justify-content: center;
+      padding: 3rem;
+    }
+
+    .card--featured .card__title {
+      font-size: clamp(2.2rem, 3.6vw, 3.2rem);
+    }
+
+    .card--featured .card__desc {
+      font-size: 1.05rem;
+    }
+
+    .card--featured .card__cta {
+      margin-top: 1rem;
+    }
+  }
+
+  /* ---------------- Grafo ---------------- */
+  .network {
+    margin-top: 7rem;
+  }
+
+  .network__hint {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-faint);
+  }
+
+  .network__frame {
+    position: relative;
+    padding: clamp(1rem, 3vw, 2.5rem);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background:
+      radial-gradient(60% 80% at 50% 50%, rgba(39, 85, 237, 0.1), transparent 70%),
+      linear-gradient(var(--border) 1px, transparent 1px) 0 0 / 40px 40px,
+      linear-gradient(90deg, var(--border) 1px, transparent 1px) 0 0 / 40px 40px,
+      rgba(8, 12, 24, 0.85);
+    backdrop-filter: blur(14px);
+  }
+
+  .network__frame svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .graph-edge {
+    stroke: url(#edge-g);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    opacity: 0.55;
+    transition:
+      opacity 0.3s ease,
+      stroke-width 0.3s ease;
+  }
+
+  :global(.js) .graph-edge {
+    stroke-dashoffset: 1;
+  }
+
+  .graph-node {
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+
+  .graph-node__dot,
+  .graph-node__halo {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .graph-node__dot {
+    fill: url(#node-g);
+    stroke: #000000;
+    stroke-width: 3;
+    transition: filter 0.3s ease;
+  }
+
+  .graph-node__halo {
+    fill: none;
+    stroke: var(--brand-primary);
+    stroke-width: 1.5;
+    opacity: 0;
+  }
+
+  .graph-node text {
+    fill: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: 17px;
+    transition: fill 0.3s ease;
+  }
+
+  .network__frame.is-focused .graph-node:not(.is-active) {
+    opacity: 0.35;
+  }
+
+  .network__frame.is-focused .graph-edge {
+    opacity: 0.12;
+  }
+
+  .network__frame.is-focused .graph-edge.is-active {
+    opacity: 1;
+    stroke-width: 2.6;
+  }
+
+  .graph-node.is-active .graph-node__dot {
+    filter: drop-shadow(0 0 12px rgba(39, 85, 237, 0.9));
+  }
+
+  .graph-node.is-active text {
+    fill: var(--text);
+  }
+</style>

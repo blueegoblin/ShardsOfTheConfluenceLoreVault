@@ -1,0 +1,43 @@
+---
+import { render } from 'astro:content';
+import ArticleLayout from '../../layouts/ArticleLayout.astro';
+import { buildLinkGraph, getSortedPosts, readingMinutes, toSummary, type Post } from '../../utils/posts';
+
+/**
+ * Genera una página estática por cada archivo Markdown de src/content/blog.
+ * El slug es el id de la entrada (derivado del nombre de archivo), el mismo
+ * que usan los enlaces [[...]] para construir sus rutas.
+ */
+export async function getStaticPaths() {
+  const posts = await getSortedPosts();
+  const { outgoing, incoming } = buildLinkGraph(posts);
+  const byId = new Map(posts.map((p) => [p.id, p]));
+  const summaries = (ids: string[] = []) => ids.map((id) => toSummary(byId.get(id) as Post));
+
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      outgoing: summaries(outgoing.get(post.id)),
+      backlinks: summaries(incoming.get(post.id)),
+    },
+  }));
+}
+
+const { post, outgoing, backlinks } = Astro.props;
+const { Content } = await render(post);
+const { title, date, cover_image, description, tags } = post.data;
+---
+
+<ArticleLayout
+  title={title}
+  date={date}
+  cover_image={cover_image}
+  description={description}
+  tags={tags}
+  minutes={readingMinutes(post.body)}
+  outgoing={outgoing}
+  backlinks={backlinks}
+>
+  <Content />
+</ArticleLayout>

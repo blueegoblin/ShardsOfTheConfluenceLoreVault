@@ -1,0 +1,627 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { formatDate, type PostSummary } from '../utils/posts';
+import { toPostHref } from '../utils/wikilinks.mjs';
+
+interface Props {
+  title: string;
+  date: Date;
+  cover_image?: string;
+  description?: string;
+  tags?: string[];
+  minutes: number;
+  outgoing: PostSummary[];
+  backlinks: PostSummary[];
+}
+
+const { title, date, cover_image, description, tags = [], minutes, outgoing, backlinks } = Astro.props;
+
+// Cada palabra del título va en su propio <span> para animarla con un ligero desfase.
+const titleWords = title.trim().split(/\s+/);
+
+// Unificar enlaces salientes y menciones (backlinks) en una sola lista sin duplicados
+const relatedMap = new Map<string, PostSummary>();
+for (const p of [...outgoing, ...backlinks]) {
+  if (!relatedMap.has(p.id)) {
+    relatedMap.set(p.id, p);
+  }
+}
+const related = Array.from(relatedMap.values());
+const hasConnections = related.length > 0;
+---
+
+<BaseLayout title={title} description={description} image={cover_image} overlayHeader>
+  <div class="reading-progress" data-reading-progress aria-hidden="true"></div>
+
+  <header class="hero" data-hero>
+    <div class="hero__media" data-hero-media data-reveal>
+      {
+        cover_image ? (
+          <img
+            class="hero__img"
+            src={cover_image}
+            alt=""
+            data-parallax-img
+            fetchpriority="high"
+            decoding="async"
+          />
+        ) : (
+          <div class="hero__img hero__img--fallback" data-parallax-img />
+        )
+      }
+    </div>
+    <div class="hero__shade" aria-hidden="true"></div>
+
+    <div class="hero__content container" data-hero-content>
+      <a href="/" class="back-link" data-reveal data-hero-fade>
+        <span aria-hidden="true">←</span> Todos los artículos
+      </a>
+
+      <h1 class="hero__title" data-article-title>
+        {
+          titleWords.map((word) => (
+            <>
+              <span class="hero__word" data-title-word data-reveal>
+                {word}
+              </span>{' '}
+            </>
+          ))
+        }
+      </h1>
+
+      {description && <p class="hero__lede" data-reveal data-hero-fade>{description}</p>}
+
+      <div class="hero__meta" data-reveal data-hero-fade>
+        <time datetime={date.toISOString()}>{formatDate(date)}</time>
+        <span class="dot" aria-hidden="true"></span>
+        <span>{minutes} min de lectura</span>
+        {tags.length > 0 && <span class="dot" aria-hidden="true" />}
+        {tags.map((tag) => <span class="chip">#{tag}</span>)}
+      </div>
+    </div>
+
+    <div class="scroll-cue" aria-hidden="true" data-reveal data-hero-fade>
+      <span></span>
+    </div>
+  </header>
+
+  <main class:list={['article-shell', 'container', { 'article-shell--solo': !hasConnections }]}>
+    <article class="prose" data-prose>
+      <slot />
+    </article>
+
+    {
+      hasConnections && (
+        <aside class="connections" aria-label="Artículos relacionados">
+          <section class="connections__group" data-scroll-reveal>
+            <h2 class="eyebrow">Relacionado</h2>
+            <ul>
+              {related.map((p) => (
+                <li>
+                  <a class="mini-card" href={toPostHref(p.id)}>
+                    {p.cover_image && <img src={p.cover_image} alt="" loading="lazy" decoding="async" />}
+                    <span>{p.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </aside>
+      )
+    }
+  </main>
+</BaseLayout>
+
+<script>
+  import { animate, createAnimatable, stagger, utils } from 'animejs';
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const hero = document.querySelector<HTMLElement>('[data-hero]');
+  const heroMedia = document.querySelector<HTMLElement>('[data-hero-media]');
+  const parallaxImg = document.querySelector<HTMLElement>('[data-parallax-img]');
+  const heroContent = document.querySelector<HTMLElement>('[data-hero-content]');
+  const titleWords = document.querySelectorAll<HTMLElement>('[data-title-word]');
+  const heroFades = document.querySelectorAll<HTMLElement>('[data-hero-fade]');
+  const progressBar = document.querySelector<HTMLElement>('[data-reading-progress]');
+  const revealTargets = document.querySelectorAll<HTMLElement>('[data-prose] > *, [data-scroll-reveal]');
+
+  if (reduceMotion) {
+    // Sin animaciones: todo visible desde el principio.
+    utils.set([heroMedia, ...titleWords, ...heroFades].filter(Boolean) as HTMLElement[], { opacity: 1 });
+  } else {
+    /* ------------------------------------------------------------------
+       1. Entrada del título: fade-in + desplazamiento de abajo hacia arriba
+       ------------------------------------------------------------------ */
+    animate(titleWords, {
+      opacity: [0, 1],
+      translateY: [80, 0],
+      duration: 1400,
+      delay: stagger(90, { start: 200 }),
+      ease: 'outExpo',
+    });
+
+    animate(heroFades, {
+      opacity: [0, 1],
+      translateY: [24, 0],
+      duration: 1100,
+      delay: stagger(120, { start: 650 }),
+      ease: 'outQuart',
+    });
+
+    /* ------------------------------------------------------------------
+       2. Entrada de la portada cuando la imagen está lista
+       ------------------------------------------------------------------ */
+    const revealCover = () =>
+      heroMedia &&
+      animate(heroMedia, { opacity: [0, 1], scale: [1.12, 1], duration: 2000, ease: 'outQuart' });
+
+    if (parallaxImg instanceof HTMLImageElement && !parallaxImg.complete) {
+      parallaxImg.addEventListener('load', revealCover, { once: true });
+      parallaxImg.addEventListener('error', revealCover, { once: true });
+    } else {
+      revealCover();
+    }
+
+    /* ------------------------------------------------------------------
+       3. Parallax: listener de scroll nativo → valores interpolados con Anime.js
+          createAnimatable suaviza cada cambio con su propia curva de easing,
+          lo que da una sensación de inercia en lugar de un salto seco.
+       ------------------------------------------------------------------ */
+    if (hero && parallaxImg && heroContent) {
+      const imgMotion = createAnimatable(parallaxImg, { translateY: 500, scale: 500, ease: 'out(3)' });
+      const contentMotion = createAnimatable(heroContent, { translateY: 500, opacity: 500, ease: 'out(3)' });
+
+      let ticking = false;
+
+      const update = () => {
+        ticking = false;
+        const heroHeight = hero.offsetHeight;
+        const scrollY = window.scrollY;
+        const progress = utils.clamp(scrollY / heroHeight, 0, 1);
+
+        // La imagen baja más despacio que el scroll y se acerca ligeramente.
+        imgMotion.translateY(utils.mapRange(progress, 0, 1, 0, heroHeight * 0.45));
+        imgMotion.scale(utils.mapRange(progress, 0, 1, 1.05, 1.25));
+
+        // El bloque de texto sube un poco más rápido y se desvanece.
+        contentMotion.translateY(utils.mapRange(progress, 0, 1, 0, -heroHeight * 0.18));
+        contentMotion.opacity(utils.clamp(1 - progress * 1.5, 0, 1));
+
+        if (progressBar) {
+          const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+          utils.set(progressBar, { scaleX: scrollable > 0 ? scrollY / scrollable : 0 });
+        }
+      };
+
+      utils.set(parallaxImg, { scale: 1.05 });
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(update);
+          }
+        },
+        { passive: true },
+      );
+      window.addEventListener('resize', update, { passive: true });
+      update();
+    }
+
+    /* ------------------------------------------------------------------
+       4. Revelado progresivo del contenido al entrar en pantalla
+       ------------------------------------------------------------------ */
+    utils.set(revealTargets, { opacity: 0, translateY: 32 });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).map((e) => e.target as HTMLElement);
+        if (!visible.length) return;
+        visible.forEach((el) => observer.unobserve(el));
+        animate(visible, {
+          opacity: 1,
+          translateY: 0,
+          duration: 900,
+          delay: stagger(80),
+          ease: 'outQuart',
+        });
+      },
+      { rootMargin: '0px 0px -10% 0px' },
+    );
+
+    revealTargets.forEach((el) => observer.observe(el));
+  }
+</script>
+
+<style>
+  /* ---------------- Barra de progreso de lectura ---------------- */
+  .reading-progress {
+    position: fixed;
+    inset: 0 0 auto;
+    height: 3px;
+    z-index: 60;
+    background: var(--gradient-brand);
+    transform-origin: 0 50%;
+    transform: scaleX(0);
+  }
+
+  /* ---------------- Hero a pantalla completa ---------------- */
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    min-height: max(560px, 100svh);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .hero__media {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    overflow: hidden;
+    background: var(--ink-900);
+  }
+
+  .hero__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    will-change: transform;
+  }
+
+  .hero__img--fallback {
+    background:
+      radial-gradient(70% 60% at 20% 20%, rgba(39, 85, 237, 0.3), transparent 60%),
+      radial-gradient(80% 70% at 50% 100%, rgba(27, 57, 158, 0.35), transparent 60%),
+      #000000;
+  }
+
+  .hero__shade {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(to top, #000000 0%, rgba(0, 0, 0, 0.8) 30%, rgba(0, 0, 0, 0.25) 65%, rgba(0, 0, 0, 0.6) 100%),
+      radial-gradient(90% 60% at 0% 100%, rgba(27, 57, 158, 0.4), transparent 70%);
+  }
+
+  .hero__content {
+    padding-block: 8rem clamp(4rem, 10vh, 7rem);
+    will-change: transform, opacity;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition:
+      border-color 0.2s ease,
+      background 0.2s ease,
+      gap 0.2s var(--ease-out);
+  }
+
+  .back-link:hover {
+    gap: 0.7rem;
+    border-color: var(--border-strong);
+    background: var(--surface-strong);
+  }
+
+  .hero__title {
+    max-width: 16ch;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2.8rem, 8.5vw, 7.5rem);
+    font-weight: 500;
+    font-style: normal;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    font-variation-settings: 'opsz' 144;
+    color: var(--text);
+    text-shadow: 0 10px 40px hsl(228 60% 2% / 0.5);
+  }
+
+  .hero__word {
+    display: inline-block;
+    will-change: transform, opacity;
+    font-style: normal;
+  }
+
+  .hero__lede {
+    max-width: 52ch;
+    margin: 1.75rem 0 0;
+    font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+    line-height: 1.55;
+    color: var(--text-muted);
+  }
+
+  .hero__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-faint);
+  }
+
+  .scroll-cue {
+    position: absolute;
+    right: clamp(1.25rem, 4vw, 3rem);
+    bottom: 3rem;
+    width: 26px;
+    height: 44px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border-strong);
+  }
+
+  .scroll-cue span {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 4px;
+    height: 8px;
+    margin-left: -2px;
+    border-radius: 4px;
+    background: var(--brand-primary);
+    animation: cue 1.8s var(--ease-out) infinite;
+  }
+
+  @keyframes cue {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    80%,
+    100% {
+      transform: translateY(18px);
+      opacity: 0;
+    }
+  }
+
+  /* ---------------- Cuerpo del artículo ---------------- */
+  .article-shell {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4rem;
+    margin-top: 1rem;
+  }
+
+  @media (min-width: 1024px) {
+    .article-shell {
+      grid-template-columns: minmax(0, var(--measure)) 280px;
+      justify-content: space-between;
+    }
+
+    .article-shell--solo {
+      grid-template-columns: minmax(0, var(--measure));
+      justify-content: center;
+    }
+  }
+
+  .prose {
+    font-size: 1.125rem;
+    color: hsl(228 20% 84%);
+  }
+
+  .prose > :global(:first-child) {
+    margin-top: 0;
+  }
+
+  .prose > :global(p:first-child::first-letter) {
+    float: left;
+    margin: 0.08em 0.12em 0 0;
+    font-family: var(--font-display);
+    font-size: 4.4em;
+    line-height: 0.8;
+    font-weight: 600;
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .prose :global(p),
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin: 0 0 1.5em;
+  }
+
+  .prose :global(h2),
+  .prose :global(h3) {
+    margin: 2.4em 0 0.8em;
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .prose :global(h2) {
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+  }
+
+  .prose :global(h3) {
+    font-size: 1.5rem;
+  }
+
+  .prose :global(li) {
+    margin-bottom: 0.5em;
+    padding-left: 0.3em;
+  }
+
+  .prose :global(li::marker) {
+    color: var(--brand-primary);
+  }
+
+  .prose :global(blockquote) {
+    position: relative;
+    margin: 2.5em 0;
+    padding: 1.25em 1.75em;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-style: normal;
+    line-height: 1.6;
+    color: var(--text);
+    background: rgba(14, 20, 36, 0.85);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand-primary);
+  }
+
+  .prose :global(blockquote::before) {
+    display: none;
+  }
+
+  .prose :global(blockquote p) {
+    margin: 0;
+  }
+
+  .prose :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    padding: 0.15em 0.4em;
+    border-radius: var(--radius-xs);
+    background: var(--ink-850);
+    border: 1px solid var(--border);
+    color: var(--brand-primary);
+  }
+
+  .prose :global(pre) {
+    margin: 2em 0;
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius);
+    background: #000000;
+    border: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .prose :global(pre code) {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+  }
+
+  .prose :global(table) {
+    width: 100%;
+    margin: 2em 0;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+
+  .prose :global(th),
+  .prose :global(td) {
+    padding: 0.75em 1em;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prose :global(th) {
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .prose :global(img) {
+    border-radius: var(--radius);
+    margin: 2em 0;
+  }
+
+  .prose :global(a:not(.wiki-link)) {
+    color: var(--brand-primary);
+    text-underline-offset: 3px;
+  }
+
+  /* ---------------- Conexiones (enlaces y backlinks) ---------------- */
+  .connections {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    align-self: start;
+  }
+
+  @media (min-width: 1024px) {
+    .connections {
+      position: sticky;
+      top: 6rem;
+    }
+  }
+
+  .connections__group {
+    padding: 1.4rem;
+    border-radius: var(--radius);
+    background: rgba(8, 12, 24, 0.82);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--brand-primary);
+  }
+
+  .connections__group h2 {
+    margin: 0 0 1rem;
+  }
+
+  .connections ul {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mini-card {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.55rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    line-height: 1.25;
+    text-decoration: none;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.2s var(--ease-out);
+  }
+
+  .mini-card img {
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-xs);
+    object-fit: cover;
+    transition: transform 0.4s var(--ease-out);
+  }
+
+  .mini-card:hover {
+    background: var(--surface-strong);
+    border-color: var(--border);
+    transform: translateX(4px);
+  }
+
+  .mini-card:hover img {
+    transform: scale(1.05);
+  }
+</style>
