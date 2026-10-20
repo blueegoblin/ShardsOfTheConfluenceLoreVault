@@ -1,7 +1,7 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { buildLinkGraph, formatDate, getSortedPosts } from '../utils/posts';
-import { toPostHref } from '../utils/wikilinks.mjs';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { buildLinkGraph, formatDate, getSortedPosts } from "../utils/posts";
+import { toPostHref } from "../utils/wikilinks.mjs";
 
 const posts = await getSortedPosts();
 const { outgoing, incoming } = buildLinkGraph(posts);
@@ -14,7 +14,8 @@ const radius = posts.length > 1 ? 160 : 0;
 
 const nodes = posts.map((post, i) => {
   const angle = -Math.PI / 2 + (i / Math.max(posts.length, 1)) * Math.PI * 2;
-  const degree = (outgoing.get(post.id)?.length ?? 0) + (incoming.get(post.id)?.length ?? 0);
+  const degree =
+    (outgoing.get(post.id)?.length ?? 0) + (incoming.get(post.id)?.length ?? 0);
   return {
     id: post.id,
     title: post.data.title,
@@ -29,7 +30,7 @@ const edgeKeys = new Set<string>();
 const edges: { source: string; target: string }[] = [];
 for (const [source, targets] of outgoing) {
   for (const target of targets) {
-    const key = [source, target].sort().join('::');
+    const key = [source, target].sort().join("::");
     if (!edgeKeys.has(key)) {
       edgeKeys.add(key);
       edges.push({ source, target });
@@ -37,7 +38,7 @@ for (const [source, targets] of outgoing) {
   }
 }
 
-const headline = ['Ideas', 'que', 'confluyen.'];
+const headline = ["Confluencia"];
 const [featured, ...rest] = posts;
 ---
 
@@ -45,7 +46,9 @@ const [featured, ...rest] = posts;
   <main>
     <!-- ---------------- Portada ---------------- -->
     <section class="intro container">
-      <p class="eyebrow" data-reveal data-intro-fade>Un blog como red de conocimiento</p>
+      <p class="eyebrow" data-reveal data-intro-fade>
+        Las crónicas de los Fragmentos
+      </p>
       <h1 class="intro__title">
         {
           headline.map((word) => (
@@ -60,17 +63,21 @@ const [featured, ...rest] = posts;
         }
       </h1>
       <p class="intro__lede" data-reveal data-intro-fade>
-        Cada artículo es un nodo. Cada <code>[[enlace]]</code> es un hilo. Explora cómo las notas se conectan entre sí
-        y deja que una idea te lleve a la siguiente.
+        Distintos mundos con sus propias leyes, criaturas y secretos. Cada
+        crónica registra un mundo y cada <code>enlace</code> abre un nexo que teje
+        el tránsito entre ellos. Explora la Confluencia y viaja a través de los Fragmentos.
       </p>
       <div class="intro__stats" data-reveal data-intro-fade>
-        <span><strong>{posts.length}</strong> artículos</span>
-        <span><strong>{edges.length}</strong> conexiones</span>
+        <span><strong>{posts.length}</strong> artículos en total</span>
       </div>
     </section>
 
     <!-- ---------------- Artículos ---------------- -->
-    <section id="articulos" class="posts container" aria-labelledby="articulos-title">
+    <section
+      id="articulos"
+      class="posts container"
+      aria-labelledby="articulos-title"
+    >
       <header class="section-head">
         <h2 id="articulos-title" class="eyebrow">Artículos recientes</h2>
       </header>
@@ -78,16 +85,15 @@ const [featured, ...rest] = posts;
       {
         posts.length === 0 ? (
           <p class="empty">
-            Todavía no hay artículos. Añade archivos <code>.md</code> en <code>src/content/blog</code>.
+            Todavía no hay artículos. Añade archivos <code>.md</code> en{" "}
+            <code>src/content/blog</code>.
           </p>
         ) : (
           <div class="grid">
-            {[featured, ...rest].map((post, i) => {
-              const links = (outgoing.get(post.id)?.length ?? 0) + (incoming.get(post.id)?.length ?? 0);
-              return (
+            {[featured, ...rest].map((post, i) => (
                 <a
                   href={toPostHref(post.id)}
-                  class:list={['card', { 'card--featured': i === 0 }]}
+                  class:list={["card", { "card--featured": i === 0 }]}
                   data-card
                   data-reveal
                 >
@@ -96,7 +102,7 @@ const [featured, ...rest] = posts;
                       <img
                         src={post.data.cover_image}
                         alt=""
-                        loading={i === 0 ? 'eager' : 'lazy'}
+                        loading={i === 0 ? "eager" : "lazy"}
                         decoding="async"
                       />
                     ) : (
@@ -105,20 +111,20 @@ const [featured, ...rest] = posts;
                   </div>
                   <div class="card__body">
                     <div class="card__meta">
-                      <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
-                      <span class="card__links" title="Conexiones">
-                        ◆ {links}
-                      </span>
+                      <time datetime={post.data.date.toISOString()}>
+                        {formatDate(post.data.date)}
+                      </time>
                     </div>
                     <h3 class="card__title">{post.data.title}</h3>
-                    {post.data.description && <p class="card__desc">{post.data.description}</p>}
+                    {post.data.description && (
+                      <p class="card__desc">{post.data.description}</p>
+                    )}
                     <span class="card__cta">
                       Leer artículo <span aria-hidden="true">→</span>
                     </span>
                   </div>
                 </a>
-              );
-            })}
+              ))}
           </div>
         )
       }
@@ -129,11 +135,20 @@ const [featured, ...rest] = posts;
       nodes.length > 0 && (
         <section id="red" class="network container" aria-labelledby="red-title">
           <header class="section-head">
-            <h2 id="red-title" class="eyebrow">La red</h2>
-            <p class="network__hint">Pasa el cursor sobre un nodo para ver sus conexiones. Haz clic para abrirlo.</p>
+            <h2 id="red-title" class="eyebrow">
+              El Tapiz Planar
+            </h2>
+            <p class="network__hint">
+              Pasa el cursor sobre un nodo para ver sus conexiones. Haz clic
+              para abrirlo.
+            </p>
           </header>
           <div class="network__frame" data-reveal data-network>
-            <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="img" aria-label="Grafo de conexiones entre artículos">
+            <svg
+              viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+              role="img"
+              aria-label="Grafo de conexiones entre artículos"
+            >
               <defs>
                 <linearGradient id="edge-g" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0" stop-color="#2755ED" />
@@ -165,9 +180,25 @@ const [featured, ...rest] = posts;
               </g>
               <g>
                 {nodes.map((n) => (
-                  <a href={toPostHref(n.id)} class="graph-node" data-node={n.id}>
-                    <circle class="graph-node__halo" cx={n.x} cy={n.y} r={n.r} data-halo />
-                    <circle class="graph-node__dot" cx={n.x} cy={n.y} r={n.r} data-dot />
+                  <a
+                    href={toPostHref(n.id)}
+                    class="graph-node"
+                    data-node={n.id}
+                  >
+                    <circle
+                      class="graph-node__halo"
+                      cx={n.x}
+                      cy={n.y}
+                      r={n.r}
+                      data-halo
+                    />
+                    <circle
+                      class="graph-node__dot"
+                      cx={n.x}
+                      cy={n.y}
+                      r={n.r}
+                      data-dot
+                    />
                     <text x={n.x} y={n.y + n.r + 26} text-anchor="middle">
                       {n.title}
                     </text>
@@ -183,56 +214,62 @@ const [featured, ...rest] = posts;
 </BaseLayout>
 
 <script>
-  import { animate, stagger, utils } from 'animejs';
+  import { animate, stagger, utils } from "animejs";
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const chars = document.querySelectorAll<HTMLElement>('[data-intro-char]');
-  const fades = document.querySelectorAll<HTMLElement>('[data-intro-fade]');
-  const cards = document.querySelectorAll<HTMLElement>('[data-card]');
-  const network = document.querySelector<HTMLElement>('[data-network]');
-  const edges = document.querySelectorAll<SVGLineElement>('[data-edge]');
-  const dots = document.querySelectorAll<SVGCircleElement>('[data-dot]');
-  const halos = document.querySelectorAll<SVGCircleElement>('[data-halo]');
-  const graphNodes = document.querySelectorAll<SVGAElement>('[data-node]');
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  const chars = document.querySelectorAll<HTMLElement>("[data-intro-char]");
+  const fades = document.querySelectorAll<HTMLElement>("[data-intro-fade]");
+  const cards = document.querySelectorAll<HTMLElement>("[data-card]");
+  const network = document.querySelector<HTMLElement>("[data-network]");
+  const edges = document.querySelectorAll<SVGLineElement>("[data-edge]");
+  const dots = document.querySelectorAll<SVGCircleElement>("[data-dot]");
+  const halos = document.querySelectorAll<SVGCircleElement>("[data-halo]");
+  const graphNodes = document.querySelectorAll<SVGAElement>("[data-node]");
 
   /* ---------- Spotlight que sigue al cursor en las tarjetas ---------- */
   cards.forEach((card) => {
-    card.addEventListener('pointermove', (event) => {
+    card.addEventListener("pointermove", (event) => {
       const rect = card.getBoundingClientRect();
-      card.style.setProperty('--mx', `${event.clientX - rect.left}px`);
-      card.style.setProperty('--my', `${event.clientY - rect.top}px`);
+      card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+      card.style.setProperty("--my", `${event.clientY - rect.top}px`);
     });
   });
 
   /* ---------- Resaltado de conexiones al pasar sobre un nodo ---------- */
   graphNodes.forEach((node) => {
     const id = node.dataset.node;
-    node.addEventListener('pointerenter', () => {
-      network?.classList.add('is-focused');
-      node.classList.add('is-active');
+    node.addEventListener("pointerenter", () => {
+      network?.classList.add("is-focused");
+      node.classList.add("is-active");
       edges.forEach((edge) => {
-        if (edge.dataset.source === id || edge.dataset.target === id) edge.classList.add('is-active');
+        if (edge.dataset.source === id || edge.dataset.target === id)
+          edge.classList.add("is-active");
       });
     });
-    node.addEventListener('pointerleave', () => {
-      network?.classList.remove('is-focused');
-      node.classList.remove('is-active');
-      edges.forEach((edge) => edge.classList.remove('is-active'));
+    node.addEventListener("pointerleave", () => {
+      network?.classList.remove("is-focused");
+      node.classList.remove("is-active");
+      edges.forEach((edge) => edge.classList.remove("is-active"));
     });
   });
 
   if (reduceMotion) {
-    utils.set([...chars, ...fades, ...cards, network].filter(Boolean) as HTMLElement[], { opacity: 1 });
+    utils.set(
+      [...chars, ...fades, ...cards, network].filter(Boolean) as HTMLElement[],
+      { opacity: 1 },
+    );
     utils.set(edges, { strokeDashoffset: 0 });
   } else {
     /* ---------- Titular: letras que emergen de abajo hacia arriba ---------- */
     animate(chars, {
       opacity: [0, 1],
-      translateY: ['0.6em', '0em'],
+      translateY: ["0.6em", "0em"],
       rotate: [8, 0],
       duration: 1300,
       delay: stagger(35, { start: 150 }),
-      ease: 'outExpo',
+      ease: "outExpo",
     });
 
     animate(fades, {
@@ -240,17 +277,17 @@ const [featured, ...rest] = posts;
       translateY: [20, 0],
       duration: 1000,
       delay: stagger(120, { start: 700 }),
-      ease: 'outQuart',
+      ease: "outQuart",
     });
 
     /* ---------- Orbes de fondo flotando en bucle ---------- */
-    animate('[data-orb]', {
+    animate("[data-orb]", {
       translateX: () => utils.random(-120, 120),
       translateY: () => utils.random(-80, 80),
       scale: () => utils.random(0.85, 1.25, 2),
       duration: () => utils.random(7000, 11000),
       delay: stagger(600),
-      ease: 'inOutSine',
+      ease: "inOutSine",
       loop: true,
       alternate: true,
     });
@@ -260,18 +297,18 @@ const [featured, ...rest] = posts;
     const playGraph = () => {
       if (graphPlayed) return;
       graphPlayed = true;
-      animate(network!, { opacity: [0, 1], duration: 600, ease: 'outQuad' });
+      animate(network!, { opacity: [0, 1], duration: 600, ease: "outQuad" });
       animate(dots, {
         scale: [0, 1],
         duration: 1200,
         delay: stagger(140, { start: 150 }),
-        ease: 'outElastic(1, .55)',
+        ease: "outElastic(1, .55)",
       });
       animate(edges, {
         strokeDashoffset: [1, 0],
         duration: 1400,
         delay: stagger(160, { start: 500 }),
-        ease: 'inOutQuart',
+        ease: "inOutQuart",
       });
       animate(halos, {
         scale: [1, 2.4],
@@ -279,14 +316,18 @@ const [featured, ...rest] = posts;
         duration: 2400,
         delay: stagger(450, { start: 1200 }),
         loop: true,
-        ease: 'outQuad',
+        ease: "outQuad",
       });
     };
 
     const observer = new IntersectionObserver(
       (entries) => {
         const visibleCards = entries
-          .filter((e) => e.isIntersecting && (e.target as HTMLElement).dataset.card !== undefined)
+          .filter(
+            (e) =>
+              e.isIntersecting &&
+              (e.target as HTMLElement).dataset.card !== undefined,
+          )
           .map((e) => e.target as HTMLElement);
 
         if (visibleCards.length) {
@@ -296,7 +337,7 @@ const [featured, ...rest] = posts;
             scale: [0.96, 1],
             duration: 1100,
             delay: stagger(110),
-            ease: 'outExpo',
+            ease: "outExpo",
           });
         }
 
@@ -306,7 +347,7 @@ const [featured, ...rest] = posts;
           observer.unobserve(e.target);
         });
       },
-      { rootMargin: '0px 0px -8% 0px' },
+      { rootMargin: "0px 0px -8% 0px" },
     );
 
     cards.forEach((card) => observer.observe(card));
@@ -337,7 +378,7 @@ const [featured, ...rest] = posts;
     left: -80px;
     width: 520px;
     height: 520px;
-    background: #2755ED;
+    background: #2755ed;
     opacity: 0.12;
   }
 
@@ -346,7 +387,7 @@ const [featured, ...rest] = posts;
     right: -120px;
     width: 600px;
     height: 600px;
-    background: #1B399E;
+    background: #1b399e;
     opacity: 0.18;
   }
 
@@ -355,7 +396,7 @@ const [featured, ...rest] = posts;
     left: 35%;
     width: 420px;
     height: 420px;
-    background: #2755ED;
+    background: #2755ed;
     opacity: 0.08;
   }
 
@@ -372,7 +413,7 @@ const [featured, ...rest] = posts;
     font-style: normal;
     line-height: 0.95;
     letter-spacing: -0.045em;
-    font-variation-settings: 'opsz' 144;
+    font-variation-settings: "opsz" 144;
     color: var(--text);
   }
 
@@ -465,12 +506,16 @@ const [featured, ...rest] = posts;
   }
 
   .card::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     pointer-events: none;
     border-radius: inherit;
-    background: radial-gradient(380px circle at var(--mx) var(--my), rgba(39, 85, 237, 0.16), transparent 50%);
+    background: radial-gradient(
+      380px circle at var(--mx) var(--my),
+      rgba(39, 85, 237, 0.16),
+      transparent 50%
+    );
     opacity: 0;
     transition: opacity 0.3s ease;
   }
@@ -502,8 +547,16 @@ const [featured, ...rest] = posts;
 
   .card__fallback {
     background:
-      radial-gradient(circle at 30% 30%, rgba(39, 85, 237, 0.35), transparent 60%),
-      radial-gradient(circle at 70% 70%, rgba(27, 57, 158, 0.3), transparent 60%),
+      radial-gradient(
+        circle at 30% 30%,
+        rgba(39, 85, 237, 0.35),
+        transparent 60%
+      ),
+      radial-gradient(
+        circle at 70% 70%,
+        rgba(27, 57, 158, 0.3),
+        transparent 60%
+      ),
       #050811;
   }
 
@@ -615,7 +668,11 @@ const [featured, ...rest] = posts;
     border-radius: var(--radius);
     border: 1px solid var(--border);
     background:
-      radial-gradient(60% 80% at 50% 50%, rgba(39, 85, 237, 0.1), transparent 70%),
+      radial-gradient(
+        60% 80% at 50% 50%,
+        rgba(39, 85, 237, 0.1),
+        transparent 70%
+      ),
       linear-gradient(var(--border) 1px, transparent 1px) 0 0 / 40px 40px,
       linear-gradient(90deg, var(--border) 1px, transparent 1px) 0 0 / 40px 40px,
       rgba(8, 12, 24, 0.85);

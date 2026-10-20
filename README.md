@@ -1,19 +1,21 @@
 # Confluencia
 
-Confluencia es un blog estatico concebido como una red de conocimiento interconectada. En lugar de organizar las publicaciones de manera exclusivamente lineal o cronologica, cada articulo opera como un nodo dentro de una malla de ideas. Los articulos se enlazan entre si mediante hipervinculos contextuales de doble corchete, permitiendo recorrer el contenido a traves de sus conexiones tematicas.
+Confluencia es la plataforma de lore, crónicas y archivo del sistema de rol de mesa **Confluencia**. Tras el cataclismo cósmico conocido como *El Gran Quebranto*, la realidad quedó dividida en los llamados **Fragmentos**: distintos planos de la existencia (con una concepción planar análoga a los planos de *Magic: The Gathering*) que flotan en el éter y convergen periódicamente.
 
-El proyecto esta construido con Astro, incorporando un sistema de diseno solido y profesional, animaciones fluidas y un fondo tridimensional interactivo basado en fragmentos cromados.
+En lugar de organizar el lore de forma exclusivamente lineal, la web funciona como un **compendio interplanar**: cada crónica registra un Fragmento o evento cósmico y los hipervínculos contextuales de doble corchete (`[[nombre-del-fragmento]]`) operan como **nexos dimensionales** que permiten navegar y explorar el tapiz del multiverso.
+
+El proyecto está construido con Astro, incorporando animaciones fluidas, un mapa visual del tapiz planar y un fondo tridimensional interactivo (**AeroShards**) de fragmentos de cristal y cromo.
 
 ---
 
-## Caracteristicas principales
+## Características principales
 
-- **Red de conocimiento bidireccional**: Soporte nativo para enlaces de estilo wiki (`[[nombre-del-archivo]]`), resolviendo automaticamente rutas HTML limpias y rastreando conexiones entrantes y salientes.
-- **Grafo interactivo de relaciones**: Mapa visual en la portada que representa la topologia de la red, los nodos existentes y el flujo de enlaces entre notas.
-- **Seccion unificada de articulos relacionados**: Cada publicacion analiza el grafo en tiempo de construccion y presenta un bloque consolidado con todos los nodos conectados.
-- **Fondo interactivo AeroShards**: Fondo geometrico con 800 fragmentos cromados en 3D que reaccionan a la posicion del cursor, pulsos de clic y agrupamiento, cubierto por una capa de desenfoque de cristal esmerilado que garantiza la legibilidad.
-- **Identidad visual corporativa**: Paleta basada en Azul Electrico (`#2755ED`), Azul Profundo (`#1B399E`), blanco y negro puro, con componentes de bordes firmes y tipografia editorial limpia.
-- **Transiciones nativas y animaciones cinematicas**: Integracion de View Transitions en el navegador y secuencias tipograficas orquestadas con Anime.js.
+- **Red de nexos interplanares bidireccionales**: Soporte nativo para enlaces de estilo wiki (`[[nombre-del-archivo]]`), resolviendo automáticamente rutas HTML limpias y rastreando conexiones entrantes y salientes entre planos.
+- **Grafo interactivo del Tapiz Planar**: Mapa visual en la portada que representa la topología del multiverso, los Fragmentos conocidos y el flujo de nexos dimensionales.
+- **Sección unificada de planos vinculados**: Cada crónica analiza el grafo en tiempo de construcción y presenta un bloque consolidado con todos los Fragmentos conectados.
+- **Fondo interactivo AeroShards**: Fondo geométrico con 800 fragmentos cromados en 3D alineados verticalmente en la zona derecha que reaccionan al cursor y a pulsos de clic.
+- **Identidad visual de ciencia y fantasía planar**: Paleta basada en Azul Eléctrico (`#2755ED`), Azul Profundo (`#1B399E`), blanco y negro puro, con componentes de bordes firmes y tipografía editorial limpia.
+- **Transiciones nativas y animaciones cinemáticas**: Integración de View Transitions en el navegador y secuencias tipográficas orquestadas con Anime.js.
 
 ---
 
@@ -69,6 +71,7 @@ El compilador procesa estos enlaces de forma estatica:
 El fondo visual implementa el componente tridimensional `AeroShards` exclusivamente en la página principal:
 
 - **Paleta cromatica**: Tonos primarios `#2755ED` y secundarios `#1B399E`, con reflejos especulares blancos y sombras profundas.
+- **Disposicion**: Orientacion vertical situada en la franja derecha (`placement="right"`), manteniendo despejada el area de texto y lectura.
 - **Simulacion fisica**: 800 fragmentos orientados a lo largo de cintas matematicas continuas con alabeo, giro y dispersion en profundidad.
 - **Interaccion de usuario**:
   - *Puntero*: Los fragmentos se apartan al paso del cursor (`mouseInteraction`, `mouseStrength: 0.75`).
