@@ -66,7 +66,7 @@ El compilador procesa estos enlaces de forma estatica:
 
 ## Fondo interactivo (AeroShards)
 
-El fondo visual implementa el componente tridimensional `AeroShards`, adaptado a la identidad corporativa:
+El fondo visual implementa el componente tridimensional `AeroShards` exclusivamente en la página principal:
 
 - **Paleta cromatica**: Tonos primarios `#2755ED` y secundarios `#1B399E`, con reflejos especulares blancos y sombras profundas.
 - **Simulacion fisica**: 800 fragmentos orientados a lo largo de cintas matematicas continuas con alabeo, giro y dispersion en profundidad.
@@ -74,7 +74,7 @@ El fondo visual implementa el componente tridimensional `AeroShards`, adaptado a
   - *Puntero*: Los fragmentos se apartan al paso del cursor (`mouseInteraction`, `mouseStrength: 0.75`).
   - *Clic*: Propaga una onda expansiva con destellos de luz sobre los fragmentos (`pulseOnClick`).
   - *Pulsacion sostenida*: Atrae los fragmentos cercanos hacia el punto de contacto (`holdToGather`).
-- **Capa de difusion y desenfoque**: Una lamina fija con `backdrop-filter: blur(38px)` y un tono `rgba(0, 0, 0, 0.55)` reposa sobre el canvas. Esto produce un efecto de vidrio esmerilado que atenua los bordes de los fragmentos y garantiza un contraste optimo para los textos.
+- **Capa de difusion y desenfoque**: Una lamina fija con `backdrop-filter: blur(3px)` y un tono `rgba(0, 0, 0, 0.05)` reposa sobre el canvas en portada. Esto brinda una transparencia practicamente total para disfrutar del efecto 3D sin opacidad obstructiva. En las paginas de lectura (articulos), el fondo 3D no se renderiza para asegurar una lectura limpia y de maximo rendimiento.
 
 ---
 

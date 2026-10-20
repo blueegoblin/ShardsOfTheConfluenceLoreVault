@@ -8,14 +8,18 @@ interface Props {
   image?: string;
   /** Si es true, la cabecera flota de forma transparente sobre un hero a pantalla completa. */
   overlayHeader?: boolean;
+  /** Si es true, muestra el fondo 3D AeroShards. Por defecto solo en la página principal. */
+  showShards?: boolean;
 }
 
 const SITE_NAME = 'Confluencia';
+const isHome = Astro.url.pathname === '/' || Astro.url.pathname === '' || Astro.url.pathname === '/index.html';
 const {
   title,
   description = 'Un blog estático donde cada idea es un nodo de una red de conocimiento.',
   image,
   overlayHeader = false,
+  showShards = isHome,
 } = Astro.props;
 
 const pageTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`;
@@ -54,37 +58,40 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
     </script>
   </head>
   <body>
-    <!-- Fondo dinámico AeroShards -->
-    <div class="aero-shards-bg" aria-hidden="true">
-      <AeroShards
-        client:only="react"
-        shardColor="#2755ed"
-        accentColor="#2755ed"
-        placement="full"
-        material="chrome"
-        markers="none"
-        count={800}
-        depthOfField={0.5}
-        vignette={0.3}
-        mouseInteraction
-        pulseOnClick
-        holdToGather
-        lightMode={false}
-        shardSize={1.4}
-        spread={1}
-        twist={1}
-        billow={0.7}
-        speed={1}
-        scale={1}
-        glow={1.5}
-        grain={0.06}
-        intro
-        mouseStrength={0.75}
-        parallax={0.5}
-        paused={false}
-      />
-      <div class="aero-shards-blur-overlay"></div>
-    </div>
+    {
+      showShards && (
+        <div class="aero-shards-bg" aria-hidden="true">
+          <AeroShards
+            client:only="react"
+            shardColor="#2755ed"
+            accentColor="#2755ed"
+            placement="full"
+            material="chrome"
+            markers="none"
+            count={800}
+            depthOfField={0.5}
+            vignette={0.3}
+            mouseInteraction
+            pulseOnClick
+            holdToGather
+            lightMode={false}
+            shardSize={1.4}
+            spread={1}
+            twist={1}
+            billow={0.7}
+            speed={1}
+            scale={1}
+            glow={1.5}
+            grain={0.06}
+            intro
+            mouseStrength={0.75}
+            parallax={0.5}
+            paused={false}
+          />
+          <div class="aero-shards-blur-overlay" />
+        </div>
+      )
+    }
 
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
@@ -157,9 +164,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url);
     height: 100%;
     z-index: 2;
     pointer-events: none;
-    backdrop-filter: blur(38px);
-    -webkit-backdrop-filter: blur(38px);
-    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    background: rgba(0, 0, 0, 0.05);
   }
 
   #contenido {

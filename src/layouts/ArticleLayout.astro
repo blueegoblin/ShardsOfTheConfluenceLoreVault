@@ -30,7 +30,7 @@ const related = Array.from(relatedMap.values());
 const hasConnections = related.length > 0;
 ---
 
-<BaseLayout title={title} description={description} image={cover_image} overlayHeader>
+<BaseLayout title={title} description={description} image={cover_image} overlayHeader showShards={false}>
   <div class="reading-progress" data-reading-progress aria-hidden="true"></div>
 
   <header class="hero" data-hero>
