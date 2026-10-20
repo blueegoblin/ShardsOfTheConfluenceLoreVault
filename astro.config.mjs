@@ -25,7 +25,19 @@ function collectPostMetadata(dir) {
 
   const files = readdirSync(dir, { recursive: true })
     .map(String)
-    .filter((file) => /\.md$/i.test(file));
+    .filter((file) => {
+      const normalized = file.replace(/\\/g, '/');
+      const fileName = normalized.split('/').pop()?.toLowerCase() || '';
+      const isReadme = fileName === 'readme.md' || fileName.startsWith('readme.');
+      const isInternal =
+        normalized.startsWith('.') ||
+        normalized.includes('/.') ||
+        normalized.includes('.obsidian') ||
+        normalized.includes('.git') ||
+        normalized.includes('.trash') ||
+        isReadme;
+      return /\.md$/i.test(file) && !isInternal;
+    });
 
   for (const file of files) {
     const slug = resolveWikiTarget(file);
@@ -36,6 +48,14 @@ function collectPostMetadata(dir) {
       const titleMatch = content.match(/^title:\s*["']?([^"'\r\n]+)["']?/m);
       if (titleMatch && titleMatch[1]) {
         titles.set(slug, titleMatch[1].trim());
+      } else {
+        const h1Match = content.match(/^#\s+(.+)$/m);
+        if (h1Match && h1Match[1]) {
+          titles.set(slug, h1Match[1].trim());
+        } else {
+          const fileName = file.split(/[/\\]/).pop()?.replace(/\.md$/i, '') ?? slug;
+          titles.set(slug, fileName);
+        }
       }
     } catch {
       // Si falla la lectura, se usará el valor por defecto

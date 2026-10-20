@@ -10,9 +10,13 @@ export interface PostSummary {
   cover_image?: string;
 }
 
-/** Todos los artículos, del más reciente al más antiguo. */
+/** Todos los artículos, del más reciente al más antiguo (excluyendo READMEs). */
 export async function getSortedPosts(): Promise<Post[]> {
-  const posts = await getCollection('blog');
+  const posts = await getCollection('blog', (entry) => {
+    const slug = (entry.id || '').toLowerCase();
+    const fileName = slug.split('/').pop() || '';
+    return fileName !== 'readme';
+  });
   return posts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 }
 

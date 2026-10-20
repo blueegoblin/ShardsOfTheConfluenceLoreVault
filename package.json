@@ -6,10 +6,13 @@
     "node": ">=22.22.0"
   },
   "scripts": {
+    "predev": "node scripts/sync-lore.mjs",
     "dev": "astro dev",
+    "prebuild": "node scripts/sync-lore.mjs",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "sync:lore": "node scripts/sync-lore.mjs",
     "generate:samples": "node scripts/generate-sample-posts.mjs"
   },
   "dependencies": {

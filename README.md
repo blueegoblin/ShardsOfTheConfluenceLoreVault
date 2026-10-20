@@ -30,33 +30,35 @@ El proyecto está construido con Astro, incorporando animaciones fluidas, un map
 
 ---
 
-## Arquitectura de datos y Content Collections
+## Arquitectura de datos y Content Collections (ConfluenceLore)
 
-El contenido reside en el directorio:
+El contenido se lee directamente del repositorio de lore y bóveda de Obsidian:
+[https://github.com/blueegoblin/ConfluenceLore.git](https://github.com/blueegoblin/ConfluenceLore.git)
 
-```text
-src/content/blog/
-```
+El repositorio está integrado en la ruta `src/content/blog` mediante dos mecanismos complementarios:
+1. **Git Submodule**: Configurado en `.gitmodules` para vincular de forma nativa ambos repositorios en Git (`src/content/blog`).
+2. **Script de sincronización automática (`scripts/sync-lore.mjs`)**: Configurado como hooks de `prebuild` y `predev` en `package.json`. Al ejecutar `npm run build` o `npm run dev` (tanto en local como en plataformas de despliegue estático como Vercel o Netlify), actualiza o clona automáticamente la última versión de la rama `main` de `ConfluenceLore`.
+3. **Compatibilidad con Obsidian**: Astro ignora automáticamente la carpeta `.obsidian`, `.trash`, `.git` y cualquier archivo interno de configuración. Además, el esquema de colecciones es tolerante con notas que no contengan metadatos YAML explícitos, infiriendo el título desde el encabezado `#` o el nombre del archivo.
 
-Cada publicacion es un archivo Markdown (`.md`) con metadatos estandarizados en el frontmatter:
+Cada publicación es un archivo Markdown (`.md`):
 
 ```markdown
 ---
-title: "El arte de conectar"
+title: "El Gran Quebranto"
 date: 2026-10-05
 cover_image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80"
-description: "Vincular ideas mediante dobles corchetes para tejer una red viva."
-tags: ["metodo", "enlaces"]
+description: "Crónica sobre el colapso del plano primordial."
+tags: ["cosmologia", "fragmentos"]
 ---
 
-Un parrafo inicial donde mencionamos [[jardines-digitales]] para vincular conceptos.
+Un párrafo inicial donde mencionamos [[nombre-del-otro-fragmento]] para entrelazar planos.
 ```
 
-### Sintaxis de enlaces internos
+### Sintaxis de enlaces internos (Wikilinks)
 
-Para crear una conexion hacia otra nota, escribe el identificador del archivo entre dobles corchetes:
+Para crear una conexión hacia otra nota, escribe el identificador del archivo entre dobles corchetes:
 
-- `[[nombre-del-archivo]]`: Se convierte automaticamente en un enlace con el titulo formateado del articulo destino.
+- `[[nombre-del-archivo]]`: Se convierte automáticamente en un enlace con el título formateado del artículo destino.
 - `[[nombre-del-archivo|Texto personalizado]]`: Permite definir un texto visible alternativo para el enlace.
 
 El compilador procesa estos enlaces de forma estatica:
