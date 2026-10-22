@@ -126,7 +126,16 @@ async function downloadZipFallback() {
   }
 }
 
-syncLore().catch((err) => {
-  console.error('[sync-lore] Error fatal durante la sincronización:', err);
-  process.exit(1);
-});
+import { syncVaultAssets } from '../src/utils/vault-assets.mjs';
+
+syncLore()
+  .then(() => {
+    console.log('🖼️  [sync-lore] Sincronizando adjuntos multimedia del baúl...');
+    syncVaultAssets();
+    console.log('✅ [sync-lore] Adjuntos multimedia sincronizados en public/vault-assets.');
+  })
+  .catch((err) => {
+    console.error('[sync-lore] Error fatal durante la sincronización:', err);
+    process.exit(1);
+  });
+

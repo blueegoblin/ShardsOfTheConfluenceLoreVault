@@ -2,6 +2,7 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { resolveWikiTarget } from './utils/wikilinks.mjs';
+import { resolveVaultAsset } from './utils/vault-assets.mjs';
 
 /**
  * Colección "blog": lee todos los Markdown de src/content/blog.
@@ -38,14 +39,19 @@ const blog = defineCollection({
     .object({
       title: z.string().optional(),
       date: z.coerce.date().optional(),
-      cover_image: z.string().optional(),
-      description: z.string().optional(),
-      tags: z.array(z.string()).default([]),
+      cover_image: z.string().nullish(),
+      description: z.string().nullish(),
+      tags: z
+        .array(z.string())
+        .nullish()
+        .transform((val) => val ?? []),
     })
     .transform((data) => ({
       ...data,
       title: data.title?.trim() || 'Sin título',
       date: data.date ?? new Date(),
+      cover_image: resolveVaultAsset(data.cover_image),
+      description: data.description ?? undefined,
     })),
 });
 

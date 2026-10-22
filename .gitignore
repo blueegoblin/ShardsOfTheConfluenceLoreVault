@@ -26,3 +26,6 @@ pnpm-debug.log*
 # obsidian settings
 .obsidian/
 .trash/
+
+# synced vault assets
+public/vault-assets/
