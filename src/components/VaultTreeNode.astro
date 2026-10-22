@@ -1,0 +1,247 @@
+---
+import type { VaultFolder } from '../utils/vault-tree';
+import VaultTreeNode from './VaultTreeNode.astro';
+
+interface Props {
+  folder: VaultFolder;
+  depth?: number;
+}
+
+const { folder, depth = 0 } = Astro.props;
+const hasChildren = folder.subfolders.length > 0 || folder.articles.length > 0;
+---
+
+<li class="tree-item" data-tree-item style={`--tree-depth: ${depth}`}>
+  <div class="tree-item__row">
+    <!-- Enlace a la carpeta/códice: al pulsar lleva al interior de la carpeta -->
+    <a href={folder.href} class="tree-folder__link">
+      <span class="tree-folder__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+          <path d="M6 6h10"></path>
+          <path d="M6 10h10"></path>
+        </svg>
+      </span>
+      <span class="tree-folder__name">{folder.name}</span>
+      <span class="tree-folder__badge" title={`${folder.totalArticles} crónicas en total`}>
+        {folder.totalArticles}
+      </span>
+    </a>
+
+    <!-- Botón con flecha: al pulsar, sin cambiar de pestaña, despliega el contenido -->
+    {hasChildren && (
+      <button
+        type="button"
+        class="tree-folder__toggle"
+        data-tree-toggle
+        aria-label={`Desplegar contenido de ${folder.name}`}
+        aria-expanded="false"
+      >
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="chevron" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    )}
+  </div>
+
+  <!-- Contenido desplegable en el mismo menú -->
+  {hasChildren && (
+    <div class="tree-children">
+      <!-- Sub-carpetas recursivas -->
+      {folder.subfolders.length > 0 && (
+        <ul class="tree-subfolders">
+          {folder.subfolders.map((sub) => (
+            <VaultTreeNode folder={sub} depth={depth + 1} />
+          ))}
+        </ul>
+      )}
+
+      <!-- Artículos directos de esta carpeta -->
+      {folder.articles.length > 0 && (
+        <ul class="tree-articles">
+          {folder.articles.map((art) => (
+            <li class="tree-article-item">
+              <a href={art.href} class="tree-article__link">
+                <span class="tree-article__bullet" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                </span>
+                <span class="tree-article__title">{art.title}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )}
+</li>
+
+<style>
+  .tree-item {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tree-item__row {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.35rem;
+    border-radius: var(--radius-xs);
+    transition: background 0.15s ease;
+  }
+
+  .tree-item__row:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .tree-folder__link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+    padding: 0.35rem 0.4rem;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: var(--radius-xs);
+    transition: color 0.15s ease;
+  }
+
+  .tree-folder__link:hover {
+    color: #fff;
+  }
+
+  .tree-folder__icon {
+    display: grid;
+    place-items: center;
+    color: var(--brand-primary);
+    flex-shrink: 0;
+  }
+
+  .tree-folder__name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tree-folder__badge {
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: rgba(39, 85, 237, 0.12);
+    border: 1px solid rgba(39, 85, 237, 0.25);
+    color: #7da0ff;
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+  }
+
+  .tree-folder__toggle {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .tree-folder__toggle:hover {
+    background: rgba(39, 85, 237, 0.15);
+    border-color: rgba(39, 85, 237, 0.35);
+    color: #fff;
+  }
+
+  .tree-folder__toggle .chevron {
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Estado expandido del acordeón */
+  :global(.tree-item.is-expanded) > .tree-item__row .tree-folder__toggle .chevron {
+    transform: rotate(90deg);
+  }
+
+  :global(.tree-item.is-expanded) > .tree-item__row {
+    background: rgba(39, 85, 237, 0.08);
+  }
+
+  .tree-children {
+    display: none;
+    margin-left: 1.1rem;
+    padding-left: 0.65rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 0.15rem;
+    margin-bottom: 0.35rem;
+  }
+
+  :global(.tree-item.is-expanded) > .tree-children {
+    display: block;
+    animation: fadeInTree 0.18s ease-out;
+  }
+
+  @keyframes fadeInTree {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .tree-subfolders,
+  .tree-articles {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tree-article-item {
+    margin: 0.1rem 0;
+  }
+
+  .tree-article__link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.5rem;
+    text-decoration: none;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border-radius: var(--radius-xs);
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+
+  .tree-article__link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .tree-article__bullet {
+    display: grid;
+    place-items: center;
+    color: var(--text-faint);
+    flex-shrink: 0;
+  }
+
+  .tree-article__link:hover .tree-article__bullet {
+    color: var(--brand-primary);
+  }
+
+  .tree-article__title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

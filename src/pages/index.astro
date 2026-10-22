@@ -2,9 +2,12 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { buildLinkGraph, formatDate, getSortedPosts } from "../utils/posts";
 import { toPostHref } from "../utils/wikilinks.mjs";
+import { getVaultTree } from "../utils/vault-tree";
 
 const posts = await getSortedPosts();
 const { outgoing, incoming } = buildLinkGraph(posts);
+const vaultTree = await getVaultTree();
+const vaultFolders = vaultTree.subfolders;
 
 /* ---------------- Grafo de conocimiento (posiciones calculadas en build) ---------------- */
 const VIEW_W = 800;
@@ -130,6 +133,68 @@ const [featured, ...rest] = posts;
       }
     </section>
 
+    <!-- ---------------- Códices de la Bóveda (Carpetas de Obsidian) ---------------- -->
+    <section id="codices" class="codices container" aria-labelledby="codices-title">
+      <header class="section-head">
+        <h2 id="codices-title" class="eyebrow">
+          Códices y Tomos
+        </h2>
+        <p class="codices__hint">
+          Explora los distintos tomos del universo de Confluencia clasificados por ramas y temas.
+        </p>
+      </header>
+
+      {
+        vaultFolders.length > 0 ? (
+          <div class="codices-grid">
+            {vaultFolders.map((folder) => (
+              <a href={folder.href} class="codex-card" data-reveal>
+                <div class="codex-card__header">
+                  <div class="codex-card__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                      <path d="M6 6h10" />
+                      <path d="M6 10h10" />
+                    </svg>
+                  </div>
+                  <span class="codex-card__badge">
+                    {folder.totalArticles} {folder.totalArticles === 1 ? "crónica" : "crónicas"}
+                  </span>
+                </div>
+                <div class="codex-card__body">
+                  <h3 class="codex-card__title">{folder.name}</h3>
+                  <p class="codex-card__meta">
+                    {folder.subfolders.length > 0
+                      ? `${folder.subfolders.length} ${folder.subfolders.length === 1 ? "sub-tomo" : "sub-tomos"} disponibles`
+                      : "Tomo de crónicas temáticas"}
+                  </p>
+                  <span class="codex-card__cta">
+                    Explorar tomo <span aria-hidden="true">→</span>
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div class="codices-empty" data-reveal>
+            <div class="codices-empty__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                <path d="M6 6h10" />
+                <path d="M6 10h10" />
+              </svg>
+            </div>
+            <div class="codices-empty__text">
+              <h3>Estructura por Códices</h3>
+              <p>
+                Al crear carpetas en tu bóveda de Obsidian, se clasificarán automáticamente aquí en forma de códices y ramas temáticas interconectadas.
+              </p>
+            </div>
+          </div>
+        )
+      }
+    </section>
+
     <!-- ---------------- Red de conocimiento ---------------- -->
     {
       nodes.length > 0 && (
@@ -230,11 +295,18 @@ const [featured, ...rest] = posts;
 
   /* ---------- Spotlight que sigue al cursor en las tarjetas ---------- */
   cards.forEach((card) => {
+    let rect: DOMRect | null = null;
+    card.addEventListener("pointerenter", () => {
+      rect = card.getBoundingClientRect();
+    }, { passive: true });
     card.addEventListener("pointermove", (event) => {
-      const rect = card.getBoundingClientRect();
+      if (!rect) rect = card.getBoundingClientRect();
       card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
       card.style.setProperty("--my", `${event.clientY - rect.top}px`);
-    });
+    }, { passive: true });
+    card.addEventListener("pointerleave", () => {
+      rect = null;
+    }, { passive: true });
   });
 
   /* ---------- Resaltado de conexiones al pasar sobre un nodo ---------- */
@@ -752,5 +824,139 @@ const [featured, ...rest] = posts;
 
   .graph-node.is-active text {
     fill: var(--text);
+  }
+
+  /* ---------------- Sección Códices ---------------- */
+  .codices {
+    position: relative;
+    z-index: 10;
+    margin-top: 7rem;
+  }
+
+  .codices__hint {
+    margin: 0.4rem 0 0;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+
+  .codices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .codex-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .codex-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(39, 85, 237, 0.45);
+    background: var(--surface-strong);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 22px rgba(39, 85, 237, 0.16);
+  }
+
+  .codex-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .codex-card__icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    background: rgba(39, 85, 237, 0.12);
+    border: 1px solid rgba(39, 85, 237, 0.25);
+    color: #7da0ff;
+  }
+
+  .codex-card__badge {
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  .codex-card__title {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+
+  .codex-card__meta {
+    margin: 0 0 1.25rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .codex-card__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--brand-primary);
+    margin-top: auto;
+    transition: color 0.2s ease, transform 0.2s ease;
+  }
+
+  .codex-card:hover .codex-card__cta {
+    color: #fff;
+    transform: translateX(3px);
+  }
+
+  .codices-empty {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem 2.25rem;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px dashed var(--border);
+  }
+
+  .codices-empty__icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-sm);
+    background: rgba(39, 85, 237, 0.1);
+    border: 1px solid rgba(39, 85, 237, 0.2);
+    color: #7da0ff;
+    flex-shrink: 0;
+  }
+
+  .codices-empty__text h3 {
+    margin: 0 0 0.35rem;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    color: #fff;
+  }
+
+  .codices-empty__text p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
   }
 </style>

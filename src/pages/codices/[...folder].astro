@@ -1,0 +1,499 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getVaultTree, getAllFolders, type VaultFolder } from '../../utils/vault-tree';
+import { formatDate } from '../../utils/posts';
+
+export async function getStaticPaths() {
+  const root = await getVaultTree();
+  const allFolders = getAllFolders(root);
+
+  return [
+    {
+      params: { folder: undefined },
+      props: { folder: root, isRoot: true },
+    },
+    ...allFolders.map((f) => ({
+      params: { folder: f.path },
+      props: { folder: f, isRoot: false },
+    })),
+  ];
+}
+
+interface Props {
+  folder: VaultFolder;
+  isRoot: boolean;
+}
+
+const { folder, isRoot } = Astro.props;
+
+// Construir migas de pan (breadcrumbs)
+const pathSegments = folder.path ? folder.path.split('/') : [];
+const breadcrumbs: { name: string; href: string }[] = [{ name: 'Códices', href: '/codices/' }];
+let accumulated = '';
+for (let i = 0; i < pathSegments.length; i++) {
+  const seg = pathSegments[i];
+  accumulated = accumulated ? `${accumulated}/${seg}` : seg;
+  // Capitalizar nombre legible
+  const displayName = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, ' ');
+  breadcrumbs.push({
+    name: displayName,
+    href: `/codices/${accumulated}/`,
+  });
+}
+
+// Calcular ruta del padre para el botón de volver
+const parentHref = pathSegments.length > 1
+  ? `/codices/${pathSegments.slice(0, -1).join('/')}/`
+  : isRoot
+    ? '/'
+    : '/codices/';
+
+const parentLabel = pathSegments.length > 1
+  ? pathSegments[pathSegments.length - 2].charAt(0).toUpperCase() + pathSegments[pathSegments.length - 2].slice(1).replace(/-/g, ' ')
+  : isRoot
+    ? 'Inicio'
+    : 'Todos los Códices';
+
+const pageTitle = isRoot ? 'Códices y Tomos' : `${folder.name} · Códice`;
+const pageDesc = isRoot
+  ? 'Índice de códices, ramas y crónicas del universo de Confluencia.'
+  : `Explora el códice ${folder.name} con sus crónicas y tomos secundarios.`;
+---
+
+<BaseLayout title={pageTitle} description={pageDesc} showShards={false}>
+  <main class="codex-page container">
+    <!-- Migas de pan y botón atrás -->
+    <nav class="codex-nav" aria-label="Ruta de navegación">
+      <a href={parentHref} class="back-link">
+        <span aria-hidden="true">←</span> Volver a {parentLabel}
+      </a>
+
+      <ol class="breadcrumbs">
+        <li><a href="/">Inicio</a></li>
+        {
+          breadcrumbs.map((crumb, idx) => {
+            const isLast = idx === breadcrumbs.length - 1;
+            return (
+              <li>
+                <span class="breadcrumb-sep" aria-hidden="true">/</span>
+                {isLast && !isRoot ? (
+                  <span aria-current="page">{folder.name}</span>
+                ) : (
+                  <a href={crumb.href}>{crumb.name}</a>
+                )}
+              </li>
+            );
+          })
+        }
+      </ol>
+    </nav>
+
+    <!-- Encabezado del códice -->
+    <header class="codex-header">
+      <div class="codex-header__badge">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+          <path d="M6 6h10"></path>
+          <path d="M6 10h10"></path>
+        </svg>
+        <span>{isRoot ? 'Compendio General' : 'Códice'}</span>
+      </div>
+
+      <h1 class="codex-header__title">{isRoot ? 'Códices y Tomos' : folder.name}</h1>
+
+      <p class="codex-header__meta">
+        <span>{folder.totalArticles} {folder.totalArticles === 1 ? 'crónica' : 'crónicas'} en total</span>
+        {folder.subfolders.length > 0 && (
+          <>
+            <span class="dot" aria-hidden="true">·</span>
+            <span>{folder.subfolders.length} {folder.subfolders.length === 1 ? 'sub-tomo' : 'sub-tomos'}</span>
+          </>
+        )}
+      </p>
+    </header>
+
+    <!-- Sub-carpetas (Sub-códices / Ramas) -->
+    {folder.subfolders.length > 0 && (
+      <section class="codex-section">
+        <h2 class="section-title">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          {isRoot ? 'Tomos Principales' : 'Sub-códices y Secciones'}
+        </h2>
+
+        <div class="subfolders-grid">
+          {folder.subfolders.map((sub) => (
+            <a href={sub.href} class="subfolder-card">
+              <div class="subfolder-card__icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                  <path d="M6 6h10"></path>
+                  <path d="M6 10h10"></path>
+                </svg>
+              </div>
+              <div class="subfolder-card__body">
+                <h3 class="subfolder-card__title">{sub.name}</h3>
+                <p class="subfolder-card__count">
+                  {sub.totalArticles} {sub.totalArticles === 1 ? 'crónica' : 'crónicas'}
+                  {sub.subfolders.length > 0 && ` · ${sub.subfolders.length} tomos`}
+                </p>
+              </div>
+              <span class="subfolder-card__arrow" aria-hidden="true">→</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Artículos directos de esta carpeta -->
+    <section class="codex-section">
+      <h2 class="section-title">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        {isRoot ? 'Crónicas Generales' : 'Crónicas de este Códice'}
+      </h2>
+
+      {folder.articles.length > 0 ? (
+        <div class="articles-grid">
+          {folder.articles.map((art) => (
+            <a href={art.href} class="article-card">
+              {art.cover_image && (
+                <div class="article-card__media">
+                  <img src={art.cover_image} alt="" loading="lazy" decoding="async" />
+                </div>
+              )}
+              <div class="article-card__body">
+                <time datetime={art.date.toISOString()} class="article-card__date">
+                  {formatDate(art.date)}
+                </time>
+                <h3 class="article-card__title">{art.title}</h3>
+                {art.description && (
+                  <p class="article-card__desc">{art.description}</p>
+                )}
+                <span class="article-card__cta">
+                  Leer crónica <span aria-hidden="true">→</span>
+                </span>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <div class="empty-state">
+          {folder.subfolders.length > 0 ? (
+            <p>Este tomo organiza sus crónicas en las secciones y sub-códices mostrados arriba.</p>
+          ) : (
+            <p>Aún no hay crónicas añadidas en este códice. Añade notas en esta carpeta en tu bóveda de Obsidian para verlas aquí.</p>
+          )}
+        </div>
+      )}
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .codex-page {
+    padding-top: 3.5rem;
+    padding-bottom: 6rem;
+  }
+
+  .codex-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease, transform 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: #fff;
+    transform: translateX(-2px);
+  }
+
+  .breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.85rem;
+    color: var(--text-faint);
+  }
+
+  .breadcrumbs a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .breadcrumbs a:hover {
+    color: var(--brand-primary);
+  }
+
+  .breadcrumbs [aria-current='page'] {
+    color: #fff;
+    font-weight: 500;
+  }
+
+  .breadcrumb-sep {
+    color: var(--border-strong);
+    user-select: none;
+  }
+
+  .codex-header {
+    margin-bottom: 3.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .codex-header__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(39, 85, 237, 0.12);
+    border: 1px solid rgba(39, 85, 237, 0.35);
+    color: #7da0ff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+  }
+
+  .codex-header__title {
+    margin: 0 0 0.75rem;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    font-weight: 700;
+    line-height: 1.15;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+
+  .codex-header__meta {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+
+  .dot {
+    color: var(--text-faint);
+  }
+
+  .codex-section {
+    margin-bottom: 4rem;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0 0 1.5rem;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .section-title svg {
+    color: var(--brand-primary);
+  }
+
+  /* Subcarpetas Grid */
+  .subfolders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .subfolder-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .subfolder-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(39, 85, 237, 0.45);
+    background: var(--surface-strong);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(39, 85, 237, 0.15);
+  }
+
+  .subfolder-card__icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    background: rgba(39, 85, 237, 0.12);
+    border: 1px solid rgba(39, 85, 237, 0.25);
+    color: #7da0ff;
+    flex-shrink: 0;
+  }
+
+  .subfolder-card__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .subfolder-card__title {
+    margin: 0 0 0.25rem;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .subfolder-card__count {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .subfolder-card__arrow {
+    font-size: 1.2rem;
+    color: var(--text-faint);
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+
+  .subfolder-card:hover .subfolder-card__arrow {
+    color: var(--brand-primary);
+    transform: translateX(4px);
+  }
+
+  /* Artículos Grid */
+  .articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .article-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .article-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(39, 85, 237, 0.45);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 25px rgba(39, 85, 237, 0.18);
+  }
+
+  .article-card__media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .article-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .article-card:hover .article-card__media img {
+    transform: scale(1.04);
+  }
+
+  .article-card__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.5rem;
+  }
+
+  .article-card__date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .article-card__title {
+    margin: 0 0 0.65rem;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.25;
+  }
+
+  .article-card__desc {
+    margin: 0 0 1.25rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .article-card__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--brand-primary);
+    margin-top: auto;
+  }
+
+  .article-card:hover .article-card__cta {
+    color: #fff;
+  }
+
+  .empty-state {
+    padding: 2.5rem;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    color: var(--text-muted);
+    text-align: center;
+    font-size: 0.95rem;
+  }
+</style>
