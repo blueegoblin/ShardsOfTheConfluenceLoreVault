@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getSortedPosts, type Post } from './posts';
 import { slugify, toPostHref, resolveWikiTarget, withBase } from './wikilinks.mjs';
+import { getFolderConfig, type FolderConfig } from './folder-config';
 
 function getBlogDir(): string {
   const fromCwd = join(process.cwd(), 'src', 'content', 'blog');
@@ -37,12 +38,13 @@ export interface VaultFolder {
   subfolders: VaultFolder[];
   articles: VaultArticle[];
   totalArticles: number;
+  config: FolderConfig;
 }
 
 /**
  * Escanea de forma recursiva los archivos Markdown de src/content/blog
- * ignorando carpetas internas de Obsidian (.obsidian, .trash), control de versiones (.git)
- * y carpetas que contengan únicamente adjuntos o imágenes (sin archivos Markdown).
+ * ignorando carpetas internas de Obsidian (.obsidian, .trash), control de versiones (.git),
+ * carpetas de configuración (_configFolder) y carpetas sin archivos Markdown.
  */
 export async function getVaultTree(): Promise<VaultFolder> {
   const posts = await getSortedPosts();
@@ -60,6 +62,7 @@ export async function getVaultTree(): Promise<VaultFolder> {
       subfolders: [],
       articles: [],
       totalArticles: 0,
+      config: getFolderConfig('Base de datos'),
     };
   }
 
@@ -75,6 +78,8 @@ export async function getVaultTree(): Promise<VaultFolder> {
     if (
       normalized.startsWith('.') ||
       normalized.includes('/.') ||
+      normalized.startsWith('_') ||
+      normalized.includes('/_') ||
       normalized.includes('.obsidian') ||
       normalized.includes('.git') ||
       normalized.includes('.trash') ||
@@ -161,14 +166,17 @@ export async function getVaultTree(): Promise<VaultFolder> {
 
     const totalArticles = articles.length + subfolders.reduce((acc, s) => acc + s.totalArticles, 0);
 
+    const config = getFolderConfig(node.name);
+
     return {
-      name: node.name,
+      name: config.title || node.name,
       slug: node.slug,
       path: node.path,
       href: node.path ? withBase(`codices/${node.path}/`) : withBase('codices/'),
       subfolders,
       articles,
       totalArticles,
+      config,
     };
   }
 

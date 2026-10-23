@@ -126,12 +126,16 @@ const pageDesc = isRoot
         <div class="subfolders-grid">
           {folder.subfolders.map((sub) => (
             <a href={sub.href} class="subfolder-card">
-              <div class="subfolder-card__icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
-                  <path d="M6 6h10"></path>
-                  <path d="M6 10h10"></path>
-                </svg>
+              <div class="subfolder-card__icon" aria-hidden="true" style={sub.config?.orb?.glowColor ? `color: ${sub.config.orb.glowColor}; border-color: ${sub.config.orb.glowColor}50; background: ${sub.config.orb.glowColor}15;` : ''}>
+                {sub.config?.iconSvg ? (
+                  <Fragment set:html={sub.config.iconSvg} />
+                ) : (
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                    <path d="M6 6h10"></path>
+                    <path d="M6 10h10"></path>
+                  </svg>
+                )}
               </div>
               <div class="subfolder-card__body">
                 <h3 class="subfolder-card__title">{sub.name}</h3>
@@ -361,6 +365,11 @@ const pageDesc = isRoot
     border: 1px solid rgba(39, 85, 237, 0.25);
     color: #7da0ff;
     flex-shrink: 0;
+  }
+
+  .subfolder-card__icon :global(svg) {
+    width: 22px;
+    height: 22px;
   }
 
   .subfolder-card__body {

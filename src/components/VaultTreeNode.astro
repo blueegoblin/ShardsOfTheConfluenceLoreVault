@@ -15,12 +15,16 @@ const hasChildren = folder.subfolders.length > 0 || folder.articles.length > 0;
   <div class="tree-item__row">
     <!-- Enlace a la carpeta/códice: al pulsar lleva al interior de la carpeta -->
     <a href={folder.href} class="tree-folder__link">
-      <span class="tree-folder__icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
-          <path d="M6 6h10"></path>
-          <path d="M6 10h10"></path>
-        </svg>
+      <span class="tree-folder__icon" aria-hidden="true" style={folder.config?.orb?.glowColor ? `color: ${folder.config.orb.glowColor}` : ''}>
+        {folder.config?.iconSvg ? (
+          <Fragment set:html={folder.config.iconSvg} />
+        ) : (
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+            <path d="M6 6h10"></path>
+            <path d="M6 10h10"></path>
+          </svg>
+        )}
       </span>
       <span class="tree-folder__name">{folder.name}</span>
       <span class="tree-folder__badge" title={`${folder.totalArticles} crónicas en total`}>
@@ -122,6 +126,11 @@ const hasChildren = folder.subfolders.length > 0 || folder.articles.length > 0;
     place-items: center;
     color: var(--brand-primary);
     flex-shrink: 0;
+  }
+
+  .tree-folder__icon :global(svg) {
+    width: 16px;
+    height: 16px;
   }
 
   .tree-folder__name {

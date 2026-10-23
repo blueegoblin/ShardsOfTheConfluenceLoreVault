@@ -1,0 +1,17 @@
+<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+  <!-- Corona o Cuernos de la Bestia -->
+  <path d="M14 10C16 16 11 20 8 22C14 22 18 18 20 12" />
+  <path d="M34 10C32 16 37 20 40 22C34 22 30 18 28 12" />
+  <path d="M24 6V13" />
+  <!-- Cráneo / Faz mística -->
+  <path d="M15 21C15 16 20 14 24 14C28 14 33 16 33 21C33 28 29 33 24 35C19 33 15 28 15 21Z" />
+  <!-- Ojos de energía abisal -->
+  <path d="M19 23L21 24L19 25" />
+  <path d="M29 23L27 24L29 25" />
+  <!-- Fauces y colmillos -->
+  <path d="M21 29L24 31L27 29" />
+  <!-- Zarpas primigenias cruzadas -->
+  <path d="M8 36C12 34 18 36 21 41" />
+  <path d="M40 36C36 34 30 36 27 41" />
+  <path d="M12 42C15 39 19 39 24 43C29 39 33 39 36 42" />
+</svg>
