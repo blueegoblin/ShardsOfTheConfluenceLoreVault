@@ -3,7 +3,7 @@ import { readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getSortedPosts, type Post } from './posts';
-import { slugify, toPostHref, resolveWikiTarget } from './wikilinks.mjs';
+import { slugify, toPostHref, resolveWikiTarget, withBase } from './wikilinks.mjs';
 
 function getBlogDir(): string {
   const fromCwd = join(process.cwd(), 'src', 'content', 'blog');
@@ -165,7 +165,7 @@ export async function getVaultTree(): Promise<VaultFolder> {
       name: node.name,
       slug: node.slug,
       path: node.path,
-      href: node.path ? `/codices/${node.path}/` : '/codices/',
+      href: node.path ? withBase(`codices/${node.path}/`) : withBase('codices/'),
       subfolders,
       articles,
       totalArticles,

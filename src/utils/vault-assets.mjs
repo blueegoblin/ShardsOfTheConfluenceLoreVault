@@ -2,6 +2,7 @@
 import { existsSync, readdirSync, mkdirSync, copyFileSync, statSync, rmSync } from 'node:fs';
 import { join, dirname, extname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { withBase } from './wikilinks.mjs';
 
 export const MEDIA_EXTENSIONS = new Set([
   '.png',
@@ -153,7 +154,10 @@ export function resolveVaultAsset(ref, maps) {
   // Eliminar prefijo ./
   clean = clean.replace(/^\.\//, '').trim();
 
-  // Si ya comienza por /vault-assets/ o /images/
+  // Si ya comienza por /vault-assets/
+  if (clean.startsWith('/vault-assets/')) {
+    return withBase(clean);
+  }
   if (clean.startsWith('/')) {
     return clean;
   }
@@ -163,15 +167,15 @@ export function resolveVaultAsset(ref, maps) {
 
   // 1. Coincidencia por ruta relativa completa (ej: "images/confluencia.png")
   if (assetMaps.byPath.has(lowerClean)) {
-    return `/vault-assets/${assetMaps.byPath.get(lowerClean)}`;
+    return withBase(`vault-assets/${assetMaps.byPath.get(lowerClean)}`);
   }
 
   // 2. Coincidencia por nombre de archivo (ej: "confluencia.png" -> "Images/Confluencia.png")
   const justFileName = basename(clean).toLowerCase();
   if (assetMaps.byBasename.has(justFileName)) {
-    return `/vault-assets/${assetMaps.byBasename.get(justFileName)}`;
+    return withBase(`vault-assets/${assetMaps.byBasename.get(justFileName)}`);
   }
 
   // 3. Fallback directo
-  return `/vault-assets/${clean}`;
+  return withBase(`vault-assets/${clean}`);
 }

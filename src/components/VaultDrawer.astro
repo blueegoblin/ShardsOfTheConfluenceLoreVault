@@ -1,6 +1,7 @@
 ---
 import type { VaultFolder } from '../utils/vault-tree';
 import VaultTreeNode from './VaultTreeNode.astro';
+import { withBase } from '../utils/wikilinks.mjs';
 
 interface Props {
   tree: VaultFolder;
@@ -49,7 +50,7 @@ const { tree } = Astro.props;
     <!-- Contenido del menú -->
     <div class="vault-drawer__content">
       <div class="vault-drawer__intro">
-        <a href="/codices/" class="vault-drawer__all-link">
+        <a href={withBase('/codices/')} class="vault-drawer__all-link">
           <span>Ver índice completo de Códices</span>
           <span aria-hidden="true">→</span>
         </a>

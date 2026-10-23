@@ -1,7 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import { formatDate, type PostSummary } from '../utils/posts';
-import { toPostHref } from '../utils/wikilinks.mjs';
+import { toPostHref, withBase } from '../utils/wikilinks.mjs';
 
 interface Props {
   title: string;
@@ -53,7 +53,7 @@ const hasConnections = related.length > 0;
     <div class="hero__shade" aria-hidden="true"></div>
 
     <div class="hero__content container" data-hero-content>
-      <a href="/" class="back-link" data-reveal data-hero-fade>
+      <a href={withBase('/')} class="back-link" data-reveal data-hero-fade>
         <span aria-hidden="true">←</span> Todos los artículos
       </a>
 

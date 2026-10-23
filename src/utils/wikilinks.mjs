@@ -12,8 +12,30 @@
  * que Astro genera para el archivo `mi-nota.md`.
  */
 
+// Ruta base del repositorio (definida en astro.config.mjs base)
+export const SITE_BASE = '/ShardsOfTheConfluenceLoreVault';
+
+/**
+ * Añade la ruta base del sitio (base) a una URL interna.
+ * Funciona tanto con subdirectorios de GitHub Pages como con raíz o dominios propios.
+ * @param {string} [path]
+ * @returns {string}
+ */
+export function withBase(path = '') {
+  const rawBase =
+    typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL
+      ? import.meta.env.BASE_URL
+      : SITE_BASE;
+  const base = String(rawBase || '').replace(/\/+$/, '');
+  const cleanPath = String(path || '').replace(/^\/+/, '');
+  if (!base) {
+    return cleanPath ? `/${cleanPath}` : '/';
+  }
+  return cleanPath ? `${base}/${cleanPath}` : `${base}/`;
+}
+
 /** Ruta base bajo la que se publican los artículos. */
-export const BLOG_BASE_PATH = '/blog';
+export const BLOG_BASE_PATH = withBase('blog');
 
 /** Detecta enlaces del tipo [[destino]], [[destino|alias]] o [[destino#seccion]]. */
 export const WIKI_LINK_PATTERN = /\[\[([^[\]]+?)\]\]/g;
@@ -53,7 +75,7 @@ export function resolveWikiTarget(raw) {
  * @param {string} slug
  */
 export function toPostHref(slug) {
-  return `${BLOG_BASE_PATH}/${slug}/`;
+  return withBase(`blog/${slug}/`);
 }
 
 /**

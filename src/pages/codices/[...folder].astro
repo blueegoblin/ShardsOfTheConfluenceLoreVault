@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getVaultTree, getAllFolders, type VaultFolder } from '../../utils/vault-tree';
 import { formatDate } from '../../utils/posts';
+import { withBase } from '../../utils/wikilinks.mjs';
 
 export async function getStaticPaths() {
   const root = await getVaultTree();
@@ -28,7 +29,7 @@ const { folder, isRoot } = Astro.props;
 
 // Construir migas de pan (breadcrumbs)
 const pathSegments = folder.path ? folder.path.split('/') : [];
-const breadcrumbs: { name: string; href: string }[] = [{ name: 'Códices', href: '/codices/' }];
+const breadcrumbs: { name: string; href: string }[] = [{ name: 'Códices', href: withBase('/codices/') }];
 let accumulated = '';
 for (let i = 0; i < pathSegments.length; i++) {
   const seg = pathSegments[i];
@@ -37,16 +38,16 @@ for (let i = 0; i < pathSegments.length; i++) {
   const displayName = seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, ' ');
   breadcrumbs.push({
     name: displayName,
-    href: `/codices/${accumulated}/`,
+    href: withBase(`/codices/${accumulated}/`),
   });
 }
 
 // Calcular ruta del padre para el botón de volver
 const parentHref = pathSegments.length > 1
-  ? `/codices/${pathSegments.slice(0, -1).join('/')}/`
+  ? withBase(`/codices/${pathSegments.slice(0, -1).join('/')}/`)
   : isRoot
-    ? '/'
-    : '/codices/';
+    ? withBase('/')
+    : withBase('/codices/');
 
 const parentLabel = pathSegments.length > 1
   ? pathSegments[pathSegments.length - 2].charAt(0).toUpperCase() + pathSegments[pathSegments.length - 2].slice(1).replace(/-/g, ' ')
@@ -69,7 +70,7 @@ const pageDesc = isRoot
       </a>
 
       <ol class="breadcrumbs">
-        <li><a href="/">Inicio</a></li>
+        <li><a href={withBase('/')}>Inicio</a></li>
         {
           breadcrumbs.map((crumb, idx) => {
             const isLast = idx === breadcrumbs.length - 1;
