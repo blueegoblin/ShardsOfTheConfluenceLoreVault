@@ -53,7 +53,7 @@ export async function getVaultTree(): Promise<VaultFolder> {
 
   if (!existsSync(BLOG_DIR)) {
     return {
-      name: 'Bóveda',
+      name: 'Base de datos',
       slug: '',
       path: '',
       href: '/codices/',
@@ -105,7 +105,7 @@ export async function getVaultTree(): Promise<VaultFolder> {
   }
 
   const rootNode: TempNode = {
-    name: 'Bóveda',
+    name: 'Base de datos',
     slug: '',
     path: '',
     subfolders: new Map(),

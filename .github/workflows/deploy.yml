@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  # Dispara el flujo cada vez que se hace push a la rama main
+  push:
+    branches: [main]
+  # Permite activaciones externas (ej: webhook / API POST desde ConfluenceLore)
+  repository_dispatch:
+    types: [actualizar-blog]
+  # Permite ejecutar el flujo de manera manual desde la pestaña Actions en GitHub
+  workflow_dispatch:
+
+# Permisos obligatorios para la descarga de contenido y publicación en GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Evita despliegues simultáneos en competencia
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository and private submodules
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install, build, and upload site
+        uses: withastro/action@v6
+        with:
+          node-version: 22
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

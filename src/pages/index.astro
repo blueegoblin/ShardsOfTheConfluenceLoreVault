@@ -41,7 +41,7 @@ for (const [source, targets] of outgoing) {
   }
 }
 
-const headline = ["Confluencia"];
+const headline = ["Fragmentos", "de", "la", "Confluencia"];
 const [featured, ...rest] = posts;
 ---
 
@@ -94,53 +94,56 @@ const [featured, ...rest] = posts;
         ) : (
           <div class="grid">
             {[featured, ...rest].map((post, i) => (
-                <a
-                  href={toPostHref(post.id)}
-                  class:list={["card", { "card--featured": i === 0 }]}
-                  data-card
-                  data-reveal
-                >
-                  <div class="card__media">
-                    {post.data.cover_image ? (
-                      <img
-                        src={post.data.cover_image}
-                        alt=""
-                        loading={i === 0 ? "eager" : "lazy"}
-                        decoding="async"
-                      />
-                    ) : (
-                      <div class="card__fallback" />
-                    )}
+              <a
+                href={toPostHref(post.id)}
+                class:list={["card", { "card--featured": i === 0 }]}
+                data-card
+                data-reveal
+              >
+                <div class="card__media">
+                  {post.data.cover_image ? (
+                    <img
+                      src={post.data.cover_image}
+                      alt=""
+                      loading={i === 0 ? "eager" : "lazy"}
+                      decoding="async"
+                    />
+                  ) : (
+                    <div class="card__fallback" />
+                  )}
+                </div>
+                <div class="card__body">
+                  <div class="card__meta">
+                    <time datetime={post.data.date.toISOString()}>
+                      {formatDate(post.data.date)}
+                    </time>
                   </div>
-                  <div class="card__body">
-                    <div class="card__meta">
-                      <time datetime={post.data.date.toISOString()}>
-                        {formatDate(post.data.date)}
-                      </time>
-                    </div>
-                    <h3 class="card__title">{post.data.title}</h3>
-                    {post.data.description && (
-                      <p class="card__desc">{post.data.description}</p>
-                    )}
-                    <span class="card__cta">
-                      Leer artículo <span aria-hidden="true">→</span>
-                    </span>
-                  </div>
-                </a>
-              ))}
+                  <h3 class="card__title">{post.data.title}</h3>
+                  {post.data.description && (
+                    <p class="card__desc">{post.data.description}</p>
+                  )}
+                  <span class="card__cta">
+                    Leer artículo <span aria-hidden="true">→</span>
+                  </span>
+                </div>
+              </a>
+            ))}
           </div>
         )
       }
     </section>
 
-    <!-- ---------------- Códices de la Bóveda (Carpetas de Obsidian) ---------------- -->
-    <section id="codices" class="codices container" aria-labelledby="codices-title">
+    <!-- ---------------- Códices y Tomos (Secciones de la base de datos) ---------------- -->
+    <section
+      id="codices"
+      class="codices container"
+      aria-labelledby="codices-title"
+    >
       <header class="section-head">
-        <h2 id="codices-title" class="eyebrow">
-          Códices y Tomos
-        </h2>
+        <h2 id="codices-title" class="eyebrow">Códices y Tomos</h2>
         <p class="codices__hint">
-          Explora los distintos tomos del universo de Confluencia clasificados por ramas y temas.
+          Explora los distintos tomos del universo de Confluencia clasificados
+          por ramas y temas.
         </p>
       </header>
 
@@ -151,14 +154,24 @@ const [featured, ...rest] = posts;
               <a href={folder.href} class="codex-card" data-reveal>
                 <div class="codex-card__header">
                   <div class="codex-card__icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="22"
+                      height="22"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
                       <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
                       <path d="M6 6h10" />
                       <path d="M6 10h10" />
                     </svg>
                   </div>
                   <span class="codex-card__badge">
-                    {folder.totalArticles} {folder.totalArticles === 1 ? "crónica" : "crónicas"}
+                    {folder.totalArticles}{" "}
+                    {folder.totalArticles === 1 ? "crónica" : "crónicas"}
                   </span>
                 </div>
                 <div class="codex-card__body">
@@ -178,7 +191,14 @@ const [featured, ...rest] = posts;
         ) : (
           <div class="codices-empty" data-reveal>
             <div class="codices-empty__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8">
+              <svg
+                viewBox="0 0 24 24"
+                width="28"
+                height="28"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
                 <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
                 <path d="M6 6h10" />
                 <path d="M6 10h10" />
@@ -187,7 +207,9 @@ const [featured, ...rest] = posts;
             <div class="codices-empty__text">
               <h3>Estructura por Códices</h3>
               <p>
-                Al crear carpetas en tu bóveda de Obsidian, se clasificarán automáticamente aquí en forma de códices y ramas temáticas interconectadas.
+                Al crear secciones en la base de datos, se clasificarán
+                automáticamente aquí en forma de códices y ramas temáticas
+                interconectadas.
               </p>
             </div>
           </div>
@@ -296,17 +318,29 @@ const [featured, ...rest] = posts;
   /* ---------- Spotlight que sigue al cursor en las tarjetas ---------- */
   cards.forEach((card) => {
     let rect: DOMRect | null = null;
-    card.addEventListener("pointerenter", () => {
-      rect = card.getBoundingClientRect();
-    }, { passive: true });
-    card.addEventListener("pointermove", (event) => {
-      if (!rect) rect = card.getBoundingClientRect();
-      card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
-      card.style.setProperty("--my", `${event.clientY - rect.top}px`);
-    }, { passive: true });
-    card.addEventListener("pointerleave", () => {
-      rect = null;
-    }, { passive: true });
+    card.addEventListener(
+      "pointerenter",
+      () => {
+        rect = card.getBoundingClientRect();
+      },
+      { passive: true },
+    );
+    card.addEventListener(
+      "pointermove",
+      (event) => {
+        if (!rect) rect = card.getBoundingClientRect();
+        card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+        card.style.setProperty("--my", `${event.clientY - rect.top}px`);
+      },
+      { passive: true },
+    );
+    card.addEventListener(
+      "pointerleave",
+      () => {
+        rect = null;
+      },
+      { passive: true },
+    );
   });
 
   /* ---------- Resaltado de conexiones al pasar sobre un nodo ---------- */
@@ -854,14 +888,20 @@ const [featured, ...rest] = posts;
     border: 1px solid var(--border);
     text-decoration: none;
     color: inherit;
-    transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+    transition:
+      transform 0.25s ease,
+      border-color 0.25s ease,
+      background 0.25s ease,
+      box-shadow 0.25s ease;
   }
 
   .codex-card:hover {
     transform: translateY(-4px);
     border-color: rgba(39, 85, 237, 0.45);
     background: var(--surface-strong);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45), 0 0 22px rgba(39, 85, 237, 0.16);
+    box-shadow:
+      0 16px 36px rgba(0, 0, 0, 0.45),
+      0 0 22px rgba(39, 85, 237, 0.16);
   }
 
   .codex-card__header {
@@ -916,7 +956,9 @@ const [featured, ...rest] = posts;
     font-weight: 500;
     color: var(--brand-primary);
     margin-top: auto;
-    transition: color 0.2s ease, transform 0.2s ease;
+    transition:
+      color 0.2s ease,
+      transform 0.2s ease;
   }
 
   .codex-card:hover .codex-card__cta {

@@ -30,7 +30,7 @@ const { tree } = Astro.props;
             <path d="M6 10h10"></path>
           </svg>
         </span>
-        <h2 class="vault-drawer__title">Códices de la Bóveda</h2>
+        <h2 class="vault-drawer__title">Códices de la Base de Datos</h2>
       </div>
 
       <button
@@ -55,7 +55,7 @@ const { tree } = Astro.props;
         </a>
       </div>
 
-      <!-- Árbol de carpetas y subcarpetas de Obsidian -->
+      <!-- Árbol de códices y secciones de la base de datos -->
       {tree.subfolders.length > 0 ? (
         <div class="vault-drawer__section">
           <span class="vault-drawer__section-title">Estructura de Códices</span>
@@ -68,10 +68,10 @@ const { tree } = Astro.props;
       ) : (
         <div class="vault-drawer__empty">
           <p>
-            No hay carpetas adicionales en tu bóveda de Obsidian aún.
+            No hay tomos adicionales en la base de datos aún.
           </p>
           <p class="hint">
-            Crea carpetas dentro de Obsidian (como <code>Planos</code>, <code>Facciones</code> o <code>Reglas</code>) y aparecerán automáticamente aquí clasificadas.
+            Organiza secciones dentro de la base de datos (como <code>Planos</code>, <code>Facciones</code> o <code>Reglas</code>) y aparecerán automáticamente aquí clasificadas.
           </p>
         </div>
       )}
@@ -101,7 +101,7 @@ const { tree } = Astro.props;
 
     <!-- Pie del menú -->
     <footer class="vault-drawer__footer">
-      <p>Bóveda sincronizada con Obsidian</p>
+      <p>Sincronizado con la base de datos</p>
     </footer>
   </div>
 </aside>
