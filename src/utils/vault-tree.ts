@@ -212,3 +212,44 @@ export function findFolderByPath(root: VaultFolder, targetPath: string): VaultFo
   const all = getAllFolders(root);
   return all.find((f) => f.path.toLowerCase() === normalized) || null;
 }
+
+export interface ArticleParentInfo {
+  parentHref: string;
+  parentLabel: string;
+}
+
+/**
+ * Encuentra la carpeta padre de un artículo para construir el enlace "Volver a...".
+ * Por ejemplo, para un artículo en Bestiario/Angeles/Angel2.md retornará el códice Bestiario/Angeles.
+ */
+export function getArticleParentInfo(root: VaultFolder, articleId: string): ArticleParentInfo {
+  function search(folder: VaultFolder): ArticleParentInfo | null {
+    for (const art of folder.articles) {
+      if (art.id.toLowerCase() === articleId.toLowerCase()) {
+        if (folder.path) {
+          return {
+            parentHref: folder.href,
+            parentLabel: `Volver a ${folder.name}`,
+          };
+        } else {
+          return {
+            parentHref: withBase('codices/'),
+            parentLabel: 'Volver a Todos los Códices',
+          };
+        }
+      }
+    }
+
+    for (const sub of folder.subfolders) {
+      const match = search(sub);
+      if (match) return match;
+    }
+
+    return null;
+  }
+
+  return search(root) || {
+    parentHref: withBase('codices/'),
+    parentLabel: 'Volver a Todos los Códices',
+  };
+}

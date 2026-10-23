@@ -27,6 +27,8 @@ interface Props {
 
 const { folder, isRoot } = Astro.props;
 
+const defaultIconSvg = `<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>`;
+
 // Construir migas de pan (breadcrumbs)
 const pathSegments = folder.path ? folder.path.split('/') : [];
 const breadcrumbs: { name: string; href: string }[] = [{ name: 'Códices', href: withBase('/codices/') }];
@@ -90,27 +92,54 @@ const pageDesc = isRoot
     </nav>
 
     <!-- Encabezado del códice -->
-    <header class="codex-header">
-      <div class="codex-header__badge">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
-          <path d="M6 6h10"></path>
-          <path d="M6 10h10"></path>
-        </svg>
-        <span>{isRoot ? 'Compendio General' : 'Códice'}</span>
-      </div>
-
-      <h1 class="codex-header__title">{isRoot ? 'Códices y Tomos' : folder.name}</h1>
-
-      <p class="codex-header__meta">
-        <span>{folder.totalArticles} {folder.totalArticles === 1 ? 'crónica' : 'crónicas'} en total</span>
-        {folder.subfolders.length > 0 && (
-          <>
-            <span class="dot" aria-hidden="true">·</span>
-            <span>{folder.subfolders.length} {folder.subfolders.length === 1 ? 'sub-tomo' : 'sub-tomos'}</span>
-          </>
+    <header class="codex-header" style={`--orb-glow: ${folder.config?.orb?.glowColor || '#3b82f6'};`}>
+      <div class="codex-header__layout">
+        {!isRoot && (
+          <div class="codex-header__orb-wrap">
+            <div class="codex-orb-halo" aria-hidden="true" />
+            <div class="liquid-orb-wrapper">
+              <canvas
+                class="liquid-orb-canvas"
+                data-liquid-orb={JSON.stringify(folder.config?.orb || {})}
+                width="240"
+                height="240"
+                aria-label={`Orbe místico del códice ${folder.name}`}
+              />
+              <div class="liquid-orb-lens" aria-hidden="true" />
+              <div class="liquid-orb-icon" aria-hidden="true">
+                <Fragment set:html={folder.config?.iconSvg || defaultIconSvg} />
+              </div>
+            </div>
+          </div>
         )}
-      </p>
+
+        <div class="codex-header__info">
+          <div class="codex-header__badge">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+              <path d="M6 6h10"></path>
+              <path d="M6 10h10"></path>
+            </svg>
+            <span>{isRoot ? 'Compendio General' : 'Códice'}</span>
+          </div>
+
+          <h1 class="codex-header__title">{isRoot ? 'Códices y Tomos' : folder.name}</h1>
+
+          {folder.config?.description && (
+            <p class="codex-header__desc">{folder.config.description}</p>
+          )}
+
+          <p class="codex-header__meta">
+            <span>{folder.totalArticles} {folder.totalArticles === 1 ? 'crónica' : 'crónicas'} en total</span>
+            {folder.subfolders.length > 0 && (
+              <>
+                <span class="dot" aria-hidden="true">·</span>
+                <span>{folder.subfolders.length} {folder.subfolders.length === 1 ? 'sub-tomo' : 'sub-tomos'}</span>
+              </>
+            )}
+          </p>
+        </div>
+      </div>
     </header>
 
     <!-- Sub-carpetas (Sub-códices / Ramas) -->
@@ -123,30 +152,68 @@ const pageDesc = isRoot
           {isRoot ? 'Tomos Principales' : 'Sub-códices y Secciones'}
         </h2>
 
-        <div class="subfolders-grid">
-          {folder.subfolders.map((sub) => (
-            <a href={sub.href} class="subfolder-card">
-              <div class="subfolder-card__icon" aria-hidden="true" style={sub.config?.orb?.glowColor ? `color: ${sub.config.orb.glowColor}; border-color: ${sub.config.orb.glowColor}50; background: ${sub.config.orb.glowColor}15;` : ''}>
-                {sub.config?.iconSvg ? (
-                  <Fragment set:html={sub.config.iconSvg} />
-                ) : (
-                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
-                    <path d="M6 6h10"></path>
-                    <path d="M6 10h10"></path>
-                  </svg>
-                )}
-              </div>
-              <div class="subfolder-card__body">
-                <h3 class="subfolder-card__title">{sub.name}</h3>
-                <p class="subfolder-card__count">
-                  {sub.totalArticles} {sub.totalArticles === 1 ? 'crónica' : 'crónicas'}
-                  {sub.subfolders.length > 0 && ` · ${sub.subfolders.length} tomos`}
-                </p>
-              </div>
-              <span class="subfolder-card__arrow" aria-hidden="true">→</span>
-            </a>
-          ))}
+        <div class={isRoot ? "codices-grid" : "subfolders-grid"}>
+          {folder.subfolders.map((sub) => {
+            const glow = sub.config?.orb?.glowColor || "#3b82f6";
+            if (isRoot) {
+              return (
+                <div class="codex-item" style={`--orb-glow: ${glow};`}>
+                  <a href={sub.href} class="codex-orb-link" aria-label={`Entrar al tomo ${sub.name}`}>
+                    <div class="codex-orb-halo" aria-hidden="true" />
+                    <div class="liquid-orb-wrapper">
+                      <canvas
+                        class="liquid-orb-canvas"
+                        data-liquid-orb={JSON.stringify(sub.config?.orb || {})}
+                        width="220"
+                        height="220"
+                      />
+                      <div class="liquid-orb-lens" aria-hidden="true" />
+                      <div class="liquid-orb-icon" aria-hidden="true">
+                        <Fragment set:html={sub.config?.iconSvg || defaultIconSvg} />
+                      </div>
+                    </div>
+                  </a>
+                  <div class="codex-item__meta">
+                    <span class="codex-item__badge">
+                      {sub.totalArticles} {sub.totalArticles === 1 ? 'crónica' : 'crónicas'}
+                    </span>
+                    <h3 class="codex-item__title">
+                      <a href={sub.href}>{sub.name}</a>
+                    </h3>
+                    <p class="codex-item__desc">
+                      {sub.config?.description || (sub.subfolders.length > 0 ? `${sub.subfolders.length} sub-tomos disponibles` : "Tomo temático")}
+                    </p>
+                    <a href={sub.href} class="codex-item__cta">
+                      Explorar códice <span aria-hidden="true">→</span>
+                    </a>
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <a href={sub.href} class="subfolder-card">
+                <div class="subfolder-card__icon" aria-hidden="true" style={`color: ${glow}; border-color: ${glow}50; background: ${glow}15;`}>
+                  {sub.config?.iconSvg ? (
+                    <Fragment set:html={sub.config.iconSvg} />
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                      <path d="M6 6h10"></path>
+                      <path d="M6 10h10"></path>
+                    </svg>
+                  )}
+                </div>
+                <div class="subfolder-card__body">
+                  <h3 class="subfolder-card__title">{sub.name}</h3>
+                  <p class="subfolder-card__count">
+                    {sub.totalArticles} {sub.totalArticles === 1 ? 'crónica' : 'crónicas'}
+                    {sub.subfolders.length > 0 && ` · ${sub.subfolders.length} tomos`}
+                  </p>
+                </div>
+                <span class="subfolder-card__arrow" aria-hidden="true">→</span>
+              </a>
+            );
+          })}
         </div>
       </section>
     )}
@@ -506,4 +573,233 @@ const pageDesc = isRoot
     text-align: center;
     font-size: 0.95rem;
   }
+
+  /* Layout con orbe en cabecera */
+  .codex-header__layout {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    flex-wrap: wrap;
+  }
+
+  .codex-header__orb-wrap {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+    animation: orbFloat 6s ease-in-out infinite;
+  }
+
+  .codex-header__info {
+    flex: 1;
+    min-width: 280px;
+  }
+
+  .codex-header__desc {
+    margin: 0.6rem 0 1rem;
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 60ch;
+  }
+
+  /* Grid de códices flotantes sin caja para la vista raíz */
+  .codices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 3rem 2rem;
+    margin-top: 1rem;
+  }
+
+  .codex-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    padding: 1rem 0.5rem;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  .codex-orb-link {
+    display: block;
+    position: relative;
+    width: 160px;
+    height: 160px;
+    margin: 0 auto 1.25rem;
+    cursor: pointer;
+    text-decoration: none;
+    border-radius: 50%;
+    animation: orbFloat 6s ease-in-out infinite;
+  }
+
+  .codex-item:nth-child(2) .codex-orb-link { animation-delay: -2s; }
+  .codex-item:nth-child(3) .codex-orb-link { animation-delay: -4s; }
+
+  @keyframes orbFloat {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  .codex-orb-link:hover {
+    transform: translateY(-8px) scale(1.04);
+    transition: transform 0.35s var(--ease-out);
+  }
+
+  .codex-orb-halo {
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--orb-glow) 0%, transparent 70%);
+    opacity: 0.35;
+    filter: blur(18px);
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .codex-orb-link:hover .codex-orb-halo,
+  .codex-header__orb-wrap:hover .codex-orb-halo {
+    opacity: 0.75;
+    transform: scale(1.15);
+  }
+
+  .liquid-orb-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #010207;
+    box-shadow:
+      0 10px 25px rgba(0, 0, 0, 0.8),
+      inset 0 0 15px rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+  }
+
+  .liquid-orb-wrapper.is-fallback {
+    background: radial-gradient(circle at 35% 35%, var(--orb-glow) 0%, #03081a 75%);
+    animation: fallbackPulse 5s ease-in-out infinite alternate;
+  }
+
+  @keyframes fallbackPulse {
+    0% { filter: brightness(1) saturate(1); }
+    100% { filter: brightness(1.3) saturate(1.4); }
+  }
+
+  .liquid-orb-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+  }
+
+  .liquid-orb-lens {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at 35% 25%,
+      rgba(255, 255, 255, 0.45) 0%,
+      rgba(255, 255, 255, 0.08) 35%,
+      transparent 60%
+    );
+    mix-blend-mode: screen;
+  }
+
+  .liquid-orb-icon {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+    z-index: 2;
+    color: #ffffff;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 12px var(--orb-glow));
+    transition: transform 0.4s var(--ease-out), filter 0.4s ease;
+  }
+
+  .liquid-orb-icon :global(svg) {
+    width: 44px;
+    height: 44px;
+  }
+
+  .codex-orb-link:hover .liquid-orb-icon,
+  .codex-header__orb-wrap:hover .liquid-orb-icon {
+    transform: scale(1.12);
+    filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 18px #ffffff);
+  }
+
+  .codex-item__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-top: 0.25rem;
+  }
+
+  .codex-item__badge {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-bottom: 0.65rem;
+  }
+
+  .codex-item__title {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .codex-item__title a {
+    color: #ffffff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .codex-item__title a:hover {
+    color: var(--brand-primary);
+  }
+
+  .codex-item__desc {
+    margin: 0 0 1.25rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 28ch;
+  }
+
+  .codex-item__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--brand-primary);
+    text-decoration: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+
+  .codex-item:hover .codex-item__cta {
+    color: #ffffff;
+    transform: translateX(4px);
+  }
 </style>
+
+<script>
+  import { initLiquidOrbs } from '../../scripts/liquid-orb';
+  initLiquidOrbs();
+</script>

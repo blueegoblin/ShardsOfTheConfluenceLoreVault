@@ -2,6 +2,7 @@
 import { render } from 'astro:content';
 import ArticleLayout from '../../layouts/ArticleLayout.astro';
 import { buildLinkGraph, getSortedPosts, readingMinutes, toSummary, type Post } from '../../utils/posts';
+import { getVaultTree, getArticleParentInfo } from '../../utils/vault-tree';
 
 /**
  * Genera una página estática por cada archivo Markdown de src/content/blog.
@@ -10,21 +11,27 @@ import { buildLinkGraph, getSortedPosts, readingMinutes, toSummary, type Post } 
  */
 export async function getStaticPaths() {
   const posts = await getSortedPosts();
+  const vaultTree = await getVaultTree();
   const { outgoing, incoming } = buildLinkGraph(posts);
   const byId = new Map(posts.map((p) => [p.id, p]));
   const summaries = (ids: string[] = []) => ids.map((id) => toSummary(byId.get(id) as Post));
 
-  return posts.map((post) => ({
-    params: { slug: post.id },
-    props: {
-      post,
-      outgoing: summaries(outgoing.get(post.id)),
-      backlinks: summaries(incoming.get(post.id)),
-    },
-  }));
+  return posts.map((post) => {
+    const parentInfo = getArticleParentInfo(vaultTree, post.id);
+    return {
+      params: { slug: post.id },
+      props: {
+        post,
+        outgoing: summaries(outgoing.get(post.id)),
+        backlinks: summaries(incoming.get(post.id)),
+        parentHref: parentInfo.parentHref,
+        parentLabel: parentInfo.parentLabel,
+      },
+    };
+  });
 }
 
-const { post, outgoing, backlinks } = Astro.props;
+const { post, outgoing, backlinks, parentHref, parentLabel } = Astro.props;
 const { Content } = await render(post);
 const { title, date, cover_image, description, tags } = post.data;
 ---
@@ -38,6 +45,8 @@ const { title, date, cover_image, description, tags } = post.data;
   minutes={readingMinutes(post.body)}
   outgoing={outgoing}
   backlinks={backlinks}
+  parentHref={parentHref}
+  parentLabel={parentLabel}
 >
   <Content />
 </ArticleLayout>

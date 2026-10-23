@@ -12,9 +12,22 @@ interface Props {
   minutes: number;
   outgoing: PostSummary[];
   backlinks: PostSummary[];
+  parentHref?: string;
+  parentLabel?: string;
 }
 
-const { title, date, cover_image, description, tags = [], minutes, outgoing, backlinks } = Astro.props;
+const {
+  title,
+  date,
+  cover_image,
+  description,
+  tags = [],
+  minutes,
+  outgoing,
+  backlinks,
+  parentHref = withBase('/codices/'),
+  parentLabel = 'Volver a Códices',
+} = Astro.props;
 
 // Cada palabra del título va en su propio <span> para animarla con un ligero desfase.
 const titleWords = title.trim().split(/\s+/);
@@ -53,8 +66,8 @@ const hasConnections = related.length > 0;
     <div class="hero__shade" aria-hidden="true"></div>
 
     <div class="hero__content container" data-hero-content>
-      <a href={withBase('/')} class="back-link" data-reveal data-hero-fade>
-        <span aria-hidden="true">←</span> Todos los artículos
+      <a href={parentHref} class="back-link" data-reveal data-hero-fade>
+        <span aria-hidden="true">←</span> {parentLabel}
       </a>
 
       <h1 class="hero__title" data-article-title>
