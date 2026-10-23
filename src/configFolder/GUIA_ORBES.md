@@ -21,8 +21,8 @@ _configFolder/
 
 > [!NOTE]
 > - El archivo `.md` debe tener **exactamente el mismo nombre** que la carpeta que configura.
-> - La carpeta `_configFolder` está configurada para **no publicarse jamás como un artículo en el blog**.
-> - Puedes usar el cuerpo de texto del `.md` para escribir notas personales de diseño de juego que solo verás en Obsidian.
+> - La carpeta `_configFolder` está configurada para **no publicarse como una tarjeta de blog suelta**.
+> - **El cuerpo funciona como un artículo**: Todo lo que escribas debajo de los tres guiones `---` se mostrará automáticamente en la web como un **artículo introductorio del códice**, situado encima de los artículos y subcarpetas, con formato completo y enlaces `[[...]]`.
 
 ---
 
@@ -53,8 +53,16 @@ orb:
   sheenColor: "#e9d5ff"
 ---
 
-# Apuntes Internos (Opcional)
-Aquí puedes anotar lore privado sobre este tomo. No se mostrará en la web.
+## Crónica Introductoria de la Sección
+
+Aquí puedes redactar el lore, contexto o reglas de esta sección.
+Se publicará en la web como un artículo formateado encima de las subcarpetas y crónicas:
+
+- Soporta enlaces a otros artículos: [[Bienvenido|guía de inicio]] o [[Nombre del Artículo]].
+- Enlaces web externos: [Web de referencia](https://...).
+- Citas y fragmentos de texto:
+  > «Las sombras de los Fragmentos no albergan piedad alguna.»
+- Imágenes y adjuntos del baúl: `![[mapa.png]]`.
 ```
 
 ---

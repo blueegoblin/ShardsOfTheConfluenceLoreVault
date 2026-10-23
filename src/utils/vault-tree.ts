@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { getSortedPosts, type Post } from './posts';
 import { slugify, toPostHref, resolveWikiTarget, withBase } from './wikilinks.mjs';
 import { getFolderConfig, type FolderConfig } from './folder-config';
+import { renderMarkdownContent } from './render-markdown';
 
 function getBlogDir(): string {
   const fromCwd = join(process.cwd(), 'src', 'content', 'blog');
@@ -155,11 +156,15 @@ export async function getVaultTree(): Promise<VaultFolder> {
     current.articles.push(article);
   }
 
-  function finalizeNode(node: TempNode): VaultFolder {
+  async function finalizeNode(node: TempNode): Promise<VaultFolder> {
     // Ordenar subcarpetas alfabéticamente
-    const subfolders = Array.from(node.subfolders.values())
-      .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
-      .map(finalizeNode);
+    const sortedSubNodes = Array.from(node.subfolders.values())
+      .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+
+    const subfolders: VaultFolder[] = [];
+    for (const sub of sortedSubNodes) {
+      subfolders.push(await finalizeNode(sub));
+    }
 
     // Ordenar artículos por fecha más reciente
     const articles = node.articles.sort((a, b) => b.date.valueOf() - a.date.valueOf());
@@ -167,6 +172,13 @@ export async function getVaultTree(): Promise<VaultFolder> {
     const totalArticles = articles.length + subfolders.reduce((acc, s) => acc + s.totalArticles, 0);
 
     const config = getFolderConfig(node.name);
+    if (config.body) {
+      try {
+        config.html = await renderMarkdownContent(config.body);
+      } catch (err) {
+        console.warn(`[vault-tree] Error al compilar markdown de carpeta ${node.name}:`, err);
+      }
+    }
 
     return {
       name: config.title || node.name,
@@ -180,7 +192,7 @@ export async function getVaultTree(): Promise<VaultFolder> {
     };
   }
 
-  return finalizeNode(rootNode);
+  return await finalizeNode(rootNode);
 }
 
 /**

@@ -20,3 +20,11 @@ orb:
   glowColor: "#a855f7"
   sheenColor: "#e9d5ff"
 ---
+
+## Catálogo de Entidades y Bestias
+
+Las criaturas que merodean por los Fragmentos no siempre responden a las leyes naturales conocidas. Algunas nacen de la condensación del éter planar, mientras que otras son aberraciones desterradas desde eras primordiales.
+
+Para comenzar a entender los misterios de este mundo, consulta [[Bienvenido|la guía de inicio de la Confluencia]] o explora los nexos interdimensionales.
+
+> *«No mires fijamente a la grieta, pues lo que habita en ella ya ha fijado su mirada en ti.»*

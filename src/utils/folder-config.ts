@@ -40,6 +40,8 @@ export interface FolderConfig {
   icon?: string;
   iconSvg?: string;
   orb: OrbConfig;
+  body?: string;
+  html?: string;
 }
 
 export const STYLE_PRESETS: Record<string, number> = {
@@ -235,12 +237,15 @@ export function getFolderConfig(folderName: string): FolderConfig {
       }
     }
 
+    const body = sanitizedYaml.slice(frontmatterMatch[0].length).trim();
+
     return {
       title: parsed.title || parsed.name || defaultConfig.title,
       description: parsed.description || defaultConfig.description,
       icon: iconFile,
       iconSvg,
       orb: mergedOrb,
+      body,
     };
   } catch (error) {
     console.error(`[folder-config] Error al parsear ${configPath}:`, error);
