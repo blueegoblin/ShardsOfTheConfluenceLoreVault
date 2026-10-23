@@ -182,7 +182,7 @@ const [featured, ...rest] = posts;
                   <div class="codex-item__meta">
                     <span class="codex-item__badge">
                       {folder.totalArticles}{" "}
-                      {folder.totalArticles === 1 ? "crónica" : "crónicas"}
+                      {folder.totalArticles === 1 ? "artículo" : "artículos"}
                     </span>
                     <h3 class="codex-item__title">
                       <a href={folder.href}>{folder.name}</a>
@@ -190,7 +190,7 @@ const [featured, ...rest] = posts;
                     <p class="codex-item__desc">
                       {folder.config?.description || (folder.subfolders.length > 0
                         ? `${folder.subfolders.length} ${folder.subfolders.length === 1 ? "sub-tomo" : "sub-tomos"} clasificados`
-                        : "Tomo de crónicas temáticas")}
+                        : "Tomo de artículos temáticos")}
                     </p>
                     <a href={folder.href} class="codex-item__cta">
                       Explorar códice <span aria-hidden="true">→</span>

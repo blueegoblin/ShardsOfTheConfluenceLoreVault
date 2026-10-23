@@ -27,7 +27,7 @@ const hasChildren = folder.subfolders.length > 0 || folder.articles.length > 0;
         )}
       </span>
       <span class="tree-folder__name">{folder.name}</span>
-      <span class="tree-folder__badge" title={`${folder.totalArticles} crónicas en total`}>
+      <span class="tree-folder__badge" title={`${folder.totalArticles} ${folder.totalArticles === 1 ? 'artículo' : 'artículos'} en total`}>
         {folder.totalArticles}
       </span>
     </a>
