@@ -182,7 +182,13 @@ export function getFolderConfig(folderName: string): FolderConfig {
 
   try {
     const rawContent = readFileSync(configPath, 'utf-8');
-    const frontmatterMatch = rawContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    // Sanitizar espacios indivisibles (\u00A0) y tabuladores para evitar fallos de indentación en YAML
+    const sanitizedYaml = rawContent
+      .replace(/\u00A0/g, ' ')
+      .replace(/\u200B/g, '')
+      .replace(/\t/g, '  ');
+
+    const frontmatterMatch = sanitizedYaml.match(/^---\r?\n([\s\S]*?)\r?\n---/);
     if (!frontmatterMatch) {
       return defaultConfig;
     }
@@ -193,13 +199,19 @@ export function getFolderConfig(folderName: string): FolderConfig {
     }
 
     const rawOrb = parsed.orb && typeof parsed.orb === 'object' ? parsed.orb : {};
+
+    // Soportar alias glass <-> glassEnabled
+    if (rawOrb.glass !== undefined && rawOrb.glassEnabled === undefined) {
+      rawOrb.glassEnabled = Boolean(rawOrb.glass);
+    }
+
     let resolvedStyle = 20;
     if (typeof rawOrb.style === 'number') {
       resolvedStyle = rawOrb.style;
-    } else if (typeof rawOrb.style === 'string' && STYLE_PRESETS[rawOrb.style.toLowerCase()] !== undefined) {
-      resolvedStyle = STYLE_PRESETS[rawOrb.style.toLowerCase()];
-    } else if (typeof rawOrb.preset === 'string' && STYLE_PRESETS[rawOrb.preset.toLowerCase()] !== undefined) {
-      resolvedStyle = STYLE_PRESETS[rawOrb.preset.toLowerCase()];
+    } else if (typeof rawOrb.style === 'string' && STYLE_PRESETS[rawOrb.style.toLowerCase().trim()] !== undefined) {
+      resolvedStyle = STYLE_PRESETS[rawOrb.style.toLowerCase().trim()];
+    } else if (typeof rawOrb.preset === 'string' && STYLE_PRESETS[rawOrb.preset.toLowerCase().trim()] !== undefined) {
+      resolvedStyle = STYLE_PRESETS[rawOrb.preset.toLowerCase().trim()];
     }
 
     const mergedOrb: OrbConfig = {

@@ -717,6 +717,44 @@ class LiquidOrbManager {
 
     const values = new Float32Array(BASE_UNIFORM_SEED);
 
+    // Resolver estilo de forma robusta (número o nombre de preset)
+    const styleVal = custom.style ?? custom.preset ?? 20;
+    let resolvedStyle = 20;
+    if (typeof styleVal === 'number' && !isNaN(styleVal)) {
+      resolvedStyle = styleVal;
+    } else if (typeof styleVal === 'string') {
+      const lower = styleVal.toLowerCase().trim();
+      const presets: Record<string, number> = {
+        siri: 9,
+        aurora: 10,
+        plasma: 11,
+        chrome: 12,
+        opal: 13,
+        spectrum: 14,
+        frost: 15,
+        'voice-wave': 19,
+        voicewave: 19,
+        'blue-drop': 20,
+        bluedrop: 20,
+        'violet-ember': 21,
+        violetember: 21,
+        ember: 21,
+        'chromatic-metal': 22,
+        chromaticmetal: 22,
+        metal: 22,
+        'refractive-blob': 23,
+        blob: 23,
+        'particle-ribbon': 24,
+        ribbon: 24,
+      };
+      if (presets[lower] !== undefined) {
+        resolvedStyle = presets[lower];
+      } else {
+        const parsedNum = parseFloat(lower);
+        if (!isNaN(parsedNum)) resolvedStyle = parsedNum;
+      }
+    }
+
     const speed = custom.speed ?? 0.7;
     const exposure = custom.exposure ?? 1.0;
     values[3] = speed;
@@ -729,14 +767,14 @@ class LiquidOrbManager {
     values[10] = custom.sheen ?? 0.25;
     values[11] = custom.gloss ?? 0.42;
     values[14] = exposure;
-    values[15] = custom.style ?? 20; // 20: blue-drop, 21: violet-ember, etc.
+    values[15] = resolvedStyle;
     values[16] = custom.edgeSoftness ?? 0.005;
     values[17] = custom.edgeGlow ?? 0.45;
-    values[19] = custom.glassEnabled === false ? 0 : 1;
+    values[19] = (custom.glass === false || custom.glassEnabled === false) ? 0 : 1;
     values[20] = custom.glassOpacity ?? 0.72;
     values[21] = custom.contourDeform ?? 0.03;
 
-    // Colores
+    // Colores principales de la mezcla fluida
     const colA = hexToRgbaArray(custom.colorA, [values[40], values[41], values[42], values[43]]);
     values.set(colA, 40);
 
@@ -749,11 +787,43 @@ class LiquidOrbManager {
     const colD = hexToRgbaArray(custom.colorD, [values[52], values[53], values[54], values[55]]);
     values.set(colD, 52);
 
-    const glow = hexToRgbaArray(custom.glowColor, [values[84], values[85], values[86], values[87]]);
-    values.set(glow, 84);
+    // Color del destello de relieve
+    if (custom.highlightColor) {
+      const hi = hexToRgbaArray(custom.highlightColor, [values[56], values[57], values[58], values[59]]);
+      values.set(hi, 56);
+    }
 
+    // Reflejos del caparazón de cristal
+    if (custom.shellInner) {
+      const si = hexToRgbaArray(custom.shellInner, [values[60], values[61], values[62], values[63]]);
+      values.set(si, 60);
+    }
+    if (custom.shellMid) {
+      const sm = hexToRgbaArray(custom.shellMid, [values[64], values[65], values[66], values[67]]);
+      values.set(sm, 64);
+    }
+    if (custom.shellEdge) {
+      const se = hexToRgbaArray(custom.shellEdge, [values[68], values[69], values[70], values[71]]);
+      values.set(se, 68);
+    }
+
+    // Brillo satinado y especular
     const sheen = hexToRgbaArray(custom.sheenColor, [values[72], values[73], values[74], values[75]]);
     values.set(sheen, 72);
+
+    if (custom.specColor) {
+      const spec = hexToRgbaArray(custom.specColor, [values[76], values[77], values[78], values[79]]);
+      values.set(spec, 76);
+    }
+
+    if (custom.canvasColor) {
+      const bg = hexToRgbaArray(custom.canvasColor, [values[80], values[81], values[82], values[83]]);
+      values.set(bg, 80);
+    }
+
+    // Halo y aura exterior
+    const glow = hexToRgbaArray(custom.glowColor, [values[84], values[85], values[86], values[87]]);
+    values.set(glow, 84);
 
     const uniformBuffer = this.device.createBuffer({
       size: values.byteLength,
