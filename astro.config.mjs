@@ -170,9 +170,9 @@ function remarkWikiLinkTitles() {
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://blueegoblin.github.io',
+  base: '/ShardsOfTheConfluenceLoreVault',
   output: 'static',
-  site: 'https://blueegoblin.github.io', // Introduce aquí tu dominio final de GitHub Pages (ej: https://<usuario>.github.io o https://midominio.com)
-  // base: '/ConfluenceVault', // Si no usas un dominio propio o raíz de usuario, descomenta y pon el nombre del repositorio (ej: /ConfluenceVault)
   integrations: [react()],
   markdown: {
     remarkPlugins: [
