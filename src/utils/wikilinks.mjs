@@ -22,15 +22,39 @@ export const SITE_BASE = '/ShardsOfTheConfluenceLoreVault';
  * @returns {string}
  */
 export function withBase(path = '') {
-  const rawBase =
-    typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL
+  if (!path) return '';
+  const str = String(path).trim();
+  if (
+    str.startsWith('http://') ||
+    str.startsWith('https://') ||
+    str.startsWith('//') ||
+    str.startsWith('data:')
+  ) {
+    return str;
+  }
+
+  let rawBase =
+    typeof import.meta !== 'undefined' &&
+    import.meta.env?.BASE_URL &&
+    import.meta.env.BASE_URL !== '/'
       ? import.meta.env.BASE_URL
       : SITE_BASE;
+
   const base = String(rawBase || '').replace(/\/+$/, '');
-  const cleanPath = String(path || '').replace(/^\/+/, '');
+  const cleanPath = str.replace(/^\/+/, '');
+
   if (!base) {
     return cleanPath ? `/${cleanPath}` : '/';
   }
+
+  const baseName = base.replace(/^\/+/, '');
+  if (cleanPath === baseName) {
+    return `${base}/`;
+  }
+  if (cleanPath.startsWith(`${baseName}/`)) {
+    return `/${cleanPath}`;
+  }
+
   return cleanPath ? `${base}/${cleanPath}` : `${base}/`;
 }
 

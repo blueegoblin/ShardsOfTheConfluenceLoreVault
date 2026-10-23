@@ -154,12 +154,9 @@ export function resolveVaultAsset(ref, maps) {
   // Eliminar prefijo ./
   clean = clean.replace(/^\.\//, '').trim();
 
-  // Si ya comienza por /vault-assets/
-  if (clean.startsWith('/vault-assets/')) {
+  // Si ya comienza por /vault-assets/ o vault-assets/
+  if (clean.startsWith('/vault-assets/') || clean.startsWith('vault-assets/')) {
     return withBase(clean);
-  }
-  if (clean.startsWith('/')) {
-    return clean;
   }
 
   const assetMaps = maps ?? scanVaultAssets();

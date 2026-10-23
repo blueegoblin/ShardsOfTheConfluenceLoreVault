@@ -166,7 +166,7 @@ const pageDesc = isRoot
             <a href={art.href} class="article-card">
               {art.cover_image && (
                 <div class="article-card__media">
-                  <img src={art.cover_image} alt="" loading="lazy" decoding="async" />
+                  <img src={withBase(art.cover_image)} alt="" loading="lazy" decoding="async" />
                 </div>
               )}
               <div class="article-card__body">

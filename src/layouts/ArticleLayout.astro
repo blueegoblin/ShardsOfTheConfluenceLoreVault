@@ -39,7 +39,7 @@ const hasConnections = related.length > 0;
         cover_image ? (
           <img
             class="hero__img"
-            src={cover_image}
+            src={withBase(cover_image)}
             alt=""
             data-parallax-img
             fetchpriority="high"
@@ -99,7 +99,7 @@ const hasConnections = related.length > 0;
               {related.map((p) => (
                 <li>
                   <a class="mini-card" href={toPostHref(p.id)}>
-                    {p.cover_image && <img src={p.cover_image} alt="" loading="lazy" decoding="async" />}
+                    {p.cover_image && <img src={withBase(p.cover_image)} alt="" loading="lazy" decoding="async" />}
                     <span>{p.title}</span>
                   </a>
                 </li>

@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { buildLinkGraph, formatDate, getSortedPosts } from "../utils/posts";
-import { toPostHref } from "../utils/wikilinks.mjs";
+import { toPostHref, withBase } from "../utils/wikilinks.mjs";
 import { getVaultTree } from "../utils/vault-tree";
 
 const posts = await getSortedPosts();
@@ -103,7 +103,7 @@ const [featured, ...rest] = posts;
                 <div class="card__media">
                   {post.data.cover_image ? (
                     <img
-                      src={post.data.cover_image}
+                      src={withBase(post.data.cover_image)}
                       alt=""
                       loading={i === 0 ? "eager" : "lazy"}
                       decoding="async"
